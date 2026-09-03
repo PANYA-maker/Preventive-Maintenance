@@ -2052,15 +2052,74 @@
       Swal.fire({ icon: 'success', title: 'ตั้งค่าเป็น "ผ่าน" ทั้งหมดแล้ว', timer: 1200, showConfirmButton: false });
     }
 
-    function handleStrictCameraUpload(event, itemId) {
+    // ================= CLIENT-SIDE IMAGE COMPRESSION (BLAZING FAST) =================
+    function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // High quality image rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedDataUrl);
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleStrictCameraUpload(event, itemId) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        addPhotoToItem(itemId, e.target.result);
-      };
-      reader.readAsDataURL(file);
+      // Quick toast while compressing
+      const toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1000
+      });
+      toast.fire({ icon: 'info', title: 'กำลังปรับขนาดภาพให้อ่านเร็ว...' });
+
+      try {
+        const compressedBase64 = await compressImageFile(file, 800, 800, 0.65);
+        addPhotoToItem(itemId, compressedBase64);
+        toast.fire({ icon: 'success', title: 'แนบรูปภาพเรียบร้อย (ขนาดเล็ก โหลดไว)' });
+      } catch (err) {
+        console.warn('Compress error:', err);
+        const reader = new FileReader();
+        reader.onload = (e) => addPhotoToItem(itemId, e.target.result);
+        reader.readAsDataURL(file);
+      } finally {
+        event.target.value = ''; // Reset input
+      }
     }
 
     function openLiveCamera(itemId) {
@@ -2074,7 +2133,11 @@
       const video = document.getElementById('live-camera-feed');
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
-          video: { facingMode: state.cameraFacingMode }
+          video: { 
+            facingMode: state.cameraFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         }).then(stream => {
           state.cameraStream = stream;
           video.srcObject = stream;
@@ -2101,17 +2164,35 @@
     function takeLiveSnapshot() {
       const video = document.getElementById('live-camera-feed');
       const canvas = document.getElementById('live-camera-canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      
+      // Resize to lightweight dimensions (max 800px)
+      let w = video.videoWidth || 640;
+      let h = video.videoHeight || 480;
+      const maxDim = 800;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+
+      canvas.width = w;
+      canvas.height = h;
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(video, 0, 0, w, h);
 
-      const base64Img = canvas.toDataURL('image/jpeg', 0.85);
+      // Lightweight compressed JPEG quality 0.65
+      const base64Img = canvas.toDataURL('image/jpeg', 0.65);
       addPhotoToItem(state.activeCameraItemId, base64Img);
 
       closeCameraModal();
-      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย', timer: 1000, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย (ขนาดเล็ก โหลดไว)', timer: 1000, showConfirmButton: false });
     }
 
     function closeCameraModal() {
@@ -2212,8 +2293,8 @@
       }
 
       Swal.fire({
-        title: 'กำลังบันทึกข้อมูล...',
-        text: 'กำลังส่งข้อมูลไปยัง Google Sheets และอัปโหลดรูปภาพลง Google Drive',
+        title: 'กำลังบันทึกข้อมูลด่วน...',
+        html: '<div class="text-xs text-slate-500 mt-1">ส่งผลการตรวจและอัปโหลดภาพบีบอัดความเร็วสูงขึ้น Google Drive & Sheets</div>',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
@@ -2289,10 +2370,17 @@
 
       Swal.fire({
         icon: 'success',
-        title: 'บันทึกสำเร็จ!',
+        title: 'บันทึกสำเร็จรวดเร็ว! ⚡',
         text: `ตรวจเช็ค ${machine.name} เรียบร้อยแล้ว`,
-        confirmButtonColor: '#4F46E5'
+        confirmButtonColor: '#4F46E5',
+        timer: 1500,
+        showConfirmButton: false
       }).then(() => {
+        // Reset form inputs for next inspection
+        state.currentInspectPhotos = {};
+        state.currentInspectValues = {};
+        state.currentInspectRemarks = {};
+        loadChecklistForSelectedMachine(machine.name);
         if (state.userRole === 'supervisor') switchTab('dashboard');
       });
     }
