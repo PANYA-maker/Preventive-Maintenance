@@ -33,6 +33,8 @@
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+    .animate-spin-slow { animation: spin-slow 1s linear infinite; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
@@ -92,8 +94,15 @@
 
         </nav>
 
-        <!-- Role Switch / Auth Button -->
+        <!-- Top Right Actions: Cloud Sync & Role Switch -->
         <div class="flex items-center space-x-2">
+          
+          <!-- Cloud Sync Refresh Button -->
+          <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700 transition">
+            <i data-lucide="refresh-cw" id="sync-spin-icon" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">ซิงค์ชีต</span>
+          </button>
+
           <div id="auth-button-container"></div>
         </div>
 
@@ -101,10 +110,9 @@
     </div>
   </header>
 
-  <!-- ================= MOBILE BOTTOM NAVIGATION (Role Controlled) ================= -->
+  <!-- ================= MOBILE BOTTOM NAVIGATION ================= -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-2 py-1 shadow-xl flex justify-around">
     
-    <!-- Operator View: Large Scan Button + Auth Button -->
     <div id="mobile-nav-operator" class="w-full flex items-center justify-around py-1">
       <button onclick="switchTab('inspect')" class="flex flex-col items-center py-1 px-4 bg-amber-500 text-slate-900 rounded-full font-bold shadow-lg">
         <i data-lucide="qr-code" class="w-6 h-6"></i>
@@ -116,7 +124,6 @@
       </button>
     </div>
 
-    <!-- Supervisor View: Full Tabs -->
     <div id="mobile-nav-supervisor" class="hidden w-full flex items-center justify-around">
       <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center py-1 px-2 text-indigo-600 font-semibold" data-target="dashboard">
         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
@@ -148,7 +155,6 @@
     <!-- ================= 1. TAB: FIELD INSPECTION & CAMERA (PUBLIC FOR EVERYONE) ================= -->
     <section id="tab-inspect" class="tab-content space-y-6">
       
-      <!-- Operator Header & Machine Selection Card -->
       <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
@@ -165,7 +171,6 @@
           </div>
         </div>
 
-        <!-- Form Setup -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ตรวจเช็ค *</label>
@@ -195,7 +200,6 @@
         </div>
       </div>
 
-      <!-- Active Machine Info & Inspection Items -->
       <div id="checklist-container" class="hidden space-y-4">
         
         <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -219,10 +223,8 @@
           </div>
         </div>
 
-        <!-- Checklist Items List -->
         <div id="checklist-items-list" class="space-y-4"></div>
 
-        <!-- Submit Section -->
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="text-xs text-slate-500">
             <p class="font-medium text-slate-700">📌 บันทึกผลการตรวจเช็คลง Google Sheets & Google Drive</p>
@@ -235,7 +237,6 @@
 
       </div>
 
-      <!-- Empty / Placeholder State -->
       <div id="checklist-empty-state" class="bg-white p-12 rounded-2xl border border-slate-100 text-center space-y-3">
         <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
           <i data-lucide="qr-code" class="w-8 h-8"></i>
@@ -246,26 +247,43 @@
 
     </section>
 
-    <!-- ================= 2. TAB: DASHBOARD (SUPERVISOR ONLY) ================= -->
+    <!-- ================= 2. TAB: DASHBOARD (SUPERVISOR ONLY - WITH DATE PICKER) ================= -->
     <section id="tab-dashboard" class="tab-content supervisor-only hidden space-y-6">
       
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 rounded-2xl text-white shadow-md">
+      <!-- Dashboard Top Header Card -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 rounded-2xl text-white shadow-md">
         <div>
           <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <span>ภาพรวมการตรวจเช็ค PM ประจำวัน</span>
-            <span id="current-date-label" class="text-sm font-normal text-indigo-200 bg-white/10 px-3 py-1 rounded-full"></span>
           </h2>
-          <p class="text-sm text-indigo-200 mt-1">สรุปสถานะการตรวจเช็คเครื่องจักร 30 เครื่อง และรายการข้อบกพร่องที่พบ</p>
+          <p id="current-date-label" class="text-sm text-indigo-200 mt-1 flex items-center gap-1.5">
+            <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i> วันที่แสดงผล
+          </p>
         </div>
-        <div class="flex items-center gap-3">
-          <select id="dashboard-line-filter" onchange="renderDashboard()" class="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
-            <option value="ALL" class="text-slate-800">ทุกสายการผลิต (All Lines)</option>
-            <option value="ISOWA" class="text-slate-800">สาย ISOWA (10 เครื่อง)</option>
-            <option value="BHS" class="text-slate-800">สาย BHS (10 เครื่อง)</option>
-            <option value="YUELI" class="text-slate-800">สาย YUELI (10 เครื่อง)</option>
+
+        <!-- Date Picker & Filter Controls -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          
+          <!-- Date Selector Control -->
+          <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur rounded-xl px-3 py-1.5 border border-white/20">
+            <span class="text-xs text-indigo-200 font-semibold flex items-center gap-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i> วันที่:
+            </span>
+            <input type="date" id="dashboard-date-picker" onchange="changeDashboardDate(this.value)" class="bg-indigo-950 text-white text-xs px-2.5 py-1 rounded-lg border border-indigo-400/40 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono">
+            <button onclick="setDashboardToday()" class="text-[11px] bg-amber-400 hover:bg-amber-300 text-slate-900 px-2.5 py-1 rounded-lg font-bold transition">วันนี้</button>
+          </div>
+
+          <!-- Line Filter -->
+          <select id="dashboard-line-filter" onchange="renderDashboard()" class="bg-indigo-950 text-white border border-white/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400">
+            <option value="ALL">ทุกสายการผลิต (All Lines)</option>
+            <option value="ISOWA">สาย ISOWA (10 เครื่อง)</option>
+            <option value="BHS">สาย BHS (10 เครื่อง)</option>
+            <option value="YUELI">สาย YUELI (10 เครื่อง)</option>
           </select>
-          <button onclick="switchTab('inspect')" class="bg-amber-400 hover:bg-amber-300 text-slate-900 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition">
-            <i data-lucide="scan-line" class="w-4 h-4"></i> เริ่มตรวจเช็ค
+
+          <!-- Quick Actions -->
+          <button onclick="switchTab('inspect')" class="bg-amber-400 hover:bg-amber-300 text-slate-900 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition">
+            <i data-lucide="scan-line" class="w-4 h-4"></i> เริ่มตรวจ
           </button>
         </div>
       </div>
@@ -274,7 +292,7 @@
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
-            <p class="text-xs text-slate-500 font-medium">ความคืบหน้ารายวัน</p>
+            <p class="text-xs text-slate-500 font-medium">ความคืบหน้า</p>
             <h3 id="stat-percent" class="text-2xl sm:text-3xl font-extrabold text-indigo-900 mt-1">0%</h3>
             <p id="stat-completed-ratio" class="text-xs text-slate-400 mt-1">0 / 30 เครื่อง</p>
           </div>
@@ -361,7 +379,7 @@
       <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600"></i> ปัญหาล่าสุดที่ตรวจพบและรูปถ่ายหน้างาน
+            <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600"></i> ปัญหาที่ตรวจพบและรูปถ่ายจาก Google Drive
           </h3>
           <button onclick="switchTab('defects')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
             ดูทั้งหมด <i data-lucide="chevron-right" class="w-4 h-4"></i>
@@ -555,7 +573,7 @@
               <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
               <button onclick="saveGASUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">บันทึก</button>
             </div>
-            <p class="text-xs text-slate-400 mt-1.5">หากยังไม่ได้เชื่อมต่อ ระบบจะบันทึกข้อมูลไว้ในเครื่อง (LocalStorage) และแสดงผลบนหน้าจอทันที</p>
+            <p class="text-xs text-slate-400 mt-1.5">ระบบจะดึงข้อมูลจริงจาก Google Sheets โดยอัตโนมัติเมื่อเปิดแอปพลิเคชัน</p>
           </div>
 
           <!-- Supervisor PIN Setting -->
@@ -569,11 +587,11 @@
           </div>
 
           <div class="flex items-center gap-3 pt-2">
-            <button onclick="testGASConnection()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition">
-              <i data-lucide="activity" class="w-4 h-4"></i> ทดสอบการเชื่อมต่อ (Test Connection)
+            <button onclick="syncFromGoogleSheets(false)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i> ซิงค์ข้อมูลจาก Google Sheets เดี๋ยวนี้
             </button>
             <button onclick="resetToInitialData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition">
-              ล้างประวัติ & ข้อมูลจำลองทั้งหมด (Reset All)
+              ล้างแคชในเครื่อง (Reset Local Cache)
             </button>
           </div>
         </div>
@@ -653,6 +671,9 @@
 
   <!-- Main Application Logic Script -->
   <script>
+    // User's default Google Apps Script Web App URL
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxqE4OK3CdozZTl5iutaWRA-ii7wyKaCvE5n2MX3vv6Zoc63XMaLf-LuDxqlXsMwRn1/exec";
+
     // ================= GLOBAL STATE =================
     let state = {
       userRole: localStorage.getItem('PM_USER_ROLE') || 'operator',
@@ -662,6 +683,7 @@
       defects: [],
       plans: [],
       activeTab: 'inspect',
+      dashboardSelectedDate: getTodayDateString(),
       currentInspectMachine: null,
       currentCheckSheet: null,
       currentChecklistItems: [],
@@ -671,7 +693,7 @@
       currentInspectRemarks: {},
       currentMonth: new Date().getMonth(),
       currentYear: new Date().getFullYear(),
-      gasUrl: localStorage.getItem('PM_GAS_URL') || '',
+      gasUrl: localStorage.getItem('PM_GAS_URL') || DEFAULT_GAS_URL,
       html5QrScanner: null,
       cameraStream: null,
       activeCameraItemId: null,
@@ -690,6 +712,11 @@
       switchTab(startTab);
 
       handleUrlRouting();
+
+      // Auto sync from Google Sheets on load!
+      if (state.gasUrl) {
+        syncFromGoogleSheets(true);
+      }
     });
 
     function loadStoredData() {
@@ -711,10 +738,171 @@
       if (savedPlans) state.plans = JSON.parse(savedPlans);
       else state.plans = [];
 
-      if (state.gasUrl) {
-        document.getElementById('gas-url-input').value = state.gasUrl;
-      }
+      document.getElementById('gas-url-input').value = state.gasUrl;
       document.getElementById('supervisor-pin-input').value = state.supervisorPin;
+      document.getElementById('dashboard-date-picker').value = state.dashboardSelectedDate;
+    }
+
+    // ================= REAL-TIME GOOGLE SHEETS SYNC =================
+    async function syncFromGoogleSheets(isSilent = false) {
+      const url = state.gasUrl || DEFAULT_GAS_URL;
+      if (!url) return;
+
+      const spinIcon = document.getElementById('sync-spin-icon');
+      if (spinIcon) spinIcon.classList.add('animate-spin-slow');
+
+      if (!isSilent) {
+        Swal.fire({
+          title: 'กำลังเชื่อมต่อ Google Sheets...',
+          text: 'กำลังดึงข้อมูลเครื่องจักร แบบฟอร์มเช็คชีท และแผนงานล่าสุด',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+      }
+
+      try {
+        const response = await fetch(url + '?action=getAll');
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+          const d = result.data;
+
+          // 1. Normalize Machines
+          if (d.machines && Array.isArray(d.machines) && d.machines.length > 0) {
+            state.machines = d.machines.map((m, idx) => ({
+              id: m.Machine_ID || m.id || ('MCH-' + String(idx + 1).padStart(3, '0')),
+              name: m.Machine_Name || m.name || '',
+              station: m.Station || m.station || '',
+              location: m.Location || m.location || '',
+              checklistKey: m.Checklist_Key || m.checklistKey || '',
+              status: m.Status || m.status || 'Active'
+            }));
+            localStorage.setItem('PM_MACHINES', JSON.stringify(state.machines));
+          }
+
+          // 2. Normalize Check Sheets
+          if (d.checkSheets && Array.isArray(d.checkSheets)) {
+            state.checkSheets = d.checkSheets.map(s => {
+              let effDate = s.Effective_Date || s.effectiveDate || '';
+              if (effDate && effDate.includes('T')) effDate = effDate.substring(0, 10);
+              return {
+                id: s.Sheet_ID || s.id,
+                name: s.Sheet_Name || s.name || '',
+                department: s.Department || s.department || '',
+                effectiveDate: effDate || getTodayDateString(),
+                items: (s.items || []).map(it => ({
+                  taskName: it.taskName || it.Task_Name || '',
+                  standard: it.standard || it.Standard_Criteria || '',
+                  forcePhoto: it.forcePhoto || it.Force_Photo || 'ไม่บังคับ',
+                  forceValue: it.forceValue || it.Force_Value || 'ไม่บังคับ'
+                }))
+              };
+            });
+            localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
+          }
+
+          // 3. Normalize PM Plans
+          if (d.plans && Array.isArray(d.plans)) {
+            state.plans = d.plans.map(p => {
+              let pDate = p.Planned_Date || p.date || '';
+              if (pDate && pDate.includes('T')) {
+                const dt = new Date(pDate);
+                if (!isNaN(dt.getTime())) {
+                  pDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                }
+              }
+              let mName = p.Machine_ID || p.Machine_Name || p.machineName || '';
+              let sId = p.Check_Sheet_ID || p.checkSheetId || '';
+              if (mName.startsWith('CS-') && !sId) {
+                sId = mName;
+                mName = p.Machine_ID || '';
+              }
+              return {
+                id: p.Plan_ID || p.id,
+                machineName: mName,
+                checkSheetId: sId,
+                frequency: p.Frequency || p.frequency || 'รายวัน',
+                date: pDate,
+                assignee: p.Assignee || p.assignee || 'ทีม PM',
+                status: p.Status || p.status || 'pending'
+              };
+            });
+            localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+          }
+
+          // 4. Normalize Defects
+          if (d.defects && Array.isArray(d.defects)) {
+            state.defects = d.defects.map((def, idx) => {
+              let rawImg = def.Image_URLs || def.imageUrl || '';
+              let firstImg = rawImg.split('|')[0].trim();
+              let ts = def.Timestamp || def.timestamp || '';
+              if (ts && ts.includes('T')) {
+                const dt = new Date(ts);
+                if (!isNaN(dt.getTime())) ts = dt.toLocaleString('th-TH');
+              }
+              return {
+                logId: def.Defect_ID || def.logId || ('DEF-' + idx),
+                timestamp: ts,
+                machineName: def.Machine_Name || def.machineName || '',
+                station: def.Station || def.station || '',
+                taskName: def.Task_Name || def.taskName || '',
+                remark: def.Remark || def.remark || '',
+                inspector: def.Inspector || def.inspector || '',
+                imageUrl: firstImg,
+                status: def.Status || def.status || 'รอดำเนินการแก้ไข'
+              };
+            });
+            localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
+          }
+
+          // Refresh UI components
+          initUI();
+          renderDashboard();
+          renderCheckSheetsGallery();
+          renderPlanner();
+          renderDefectGallery();
+          renderMasterMachinesTable();
+
+          if (!isSilent) {
+            Swal.fire({
+              icon: 'success',
+              title: 'ซิงค์ข้อมูลสำเร็จ! 🟢',
+              text: `โหลดข้อมูลจาก Google Sheets เรียบร้อยแล้ว (เช็คชีท ${state.checkSheets.length} ชุด, แผนงาน ${state.plans.length} รายการ)`,
+              timer: 2000,
+              showConfirmButton: false
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Sync error:', err);
+        if (!isSilent) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'การเชื่อมต่อออนไลน์มีปัญหา',
+            text: 'ระบบจะใช้ข้อมูลที่บันทึกไว้ล่าสุดในเครื่องแทน'
+          });
+        }
+      } finally {
+        if (spinIcon) spinIcon.classList.remove('animate-spin-slow');
+      }
+    }
+
+    // Helper: Convert Google Drive View Link to Direct Image Thumbnail
+    function formatDriveImageUrl(url) {
+      if (!url) return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
+      if (url.includes('drive.google.com') && url.includes('/d/')) {
+        const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+        }
+      }
+      if (url.includes('drive.google.com') && url.includes('id=')) {
+        const match = url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+        }
+      }
+      return url;
     }
 
     // ================= ROLE-BASED ACCESS CONTROL (RBAC) =================
@@ -813,10 +1001,6 @@
 
     // ================= INITIALIZATION & NAVIGATION =================
     function initUI() {
-      const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      document.getElementById('current-date-label').innerText = now.toLocaleDateString('th-TH', options);
-
       const select = document.getElementById('inspect-machine-select');
       select.innerHTML = '<option value="">-- กรุณาเลือกเครื่องจักร --</option>';
       state.machines.forEach(m => {
@@ -968,7 +1152,7 @@
       
       let sheetData = {
         name: '',
-        department: 'ฝ่ายซ่อมบำรุง (Maintenance)',
+        department: 'ฝ่ายผลิต (Production)',
         effectiveDate: getTodayDateString(),
         items: [
           { taskName: '', standard: '', forcePhoto: 'ไม่บังคับ', forceValue: 'ไม่บังคับ' }
@@ -993,14 +1177,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div class="sm:col-span-2">
                 <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อเช็คชีท (Check Sheet Name) *</label>
-                <input type="text" id="builder-sheet-name" value="${sheetData.name}" placeholder="เช่น แบบตรวจเช็คประจำวันชุด Splicer & Mill roll" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="builder-sheet-name" value="${sheetData.name}" placeholder="เช่น Splicer&Mill roll-BHS (รายวัน)" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
               </div>
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">แผนก (Department) *</label>
                 <select id="builder-sheet-dept" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 text-sm">
-                  <option value="ฝ่ายซ่อมบำรุง (Maintenance)" ${sheetData.department.includes('ซ่อมบำรุง') ? 'selected' : ''}>ฝ่ายซ่อมบำรุง (Maintenance)</option>
                   <option value="ฝ่ายผลิต (Production)" ${sheetData.department.includes('ผลิต') ? 'selected' : ''}>ฝ่ายผลิต (Production)</option>
+                  <option value="ฝ่ายซ่อมบำรุง (Maintenance)" ${sheetData.department.includes('ซ่อมบำรุง') ? 'selected' : ''}>ฝ่ายซ่อมบำรุง (Maintenance)</option>
                   <option value="ฝ่ายวิศวกรรม (Engineering)" ${sheetData.department.includes('วิศวกรรม') ? 'selected' : ''}>ฝ่ายวิศวกรรม (Engineering)</option>
                   <option value="ฝ่ายควบคุมคุณภาพ (QA/QC)" ${sheetData.department.includes('คุณภาพ') ? 'selected' : ''}>ฝ่ายควบคุมคุณภาพ (QA/QC)</option>
                 </select>
@@ -1014,7 +1198,6 @@
               </div>
             </div>
 
-            <!-- Multi-row Table Section -->
             <div class="pt-3 border-t border-slate-200">
               <div class="flex items-center justify-between mb-2">
                 <div>
@@ -1105,7 +1288,6 @@
           localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
           renderCheckSheetsGallery();
 
-          // Sync to Google Sheet Backend if configured
           if (state.gasUrl && sheetObj) {
             fetch(state.gasUrl, {
               method: 'POST',
@@ -1538,7 +1720,6 @@
       localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
       renderPlanner();
 
-      // Sync Plans to Google Sheet Backend if configured
       if (state.gasUrl && newPlansBatch.length > 0) {
         fetch(state.gasUrl, {
           method: 'POST',
@@ -1556,7 +1737,7 @@
       });
     }
 
-    // ================= 3. FIELD INSPECTION (ENFORCED PHOTO & VALUE INPUT) =================
+    // ================= 3. FIELD INSPECTION =================
     function loadChecklistForSelectedMachine() {
       const machineName = document.getElementById('inspect-machine-select').value;
       const frequency = document.getElementById('inspect-frequency-select').value;
@@ -1579,7 +1760,6 @@
       state.currentInspectResults = {};
       state.currentInspectRemarks = {};
 
-      // Find bound plan or matching check sheet
       let checkSheet = null;
       const plan = state.plans.find(p => p.machineName === machine.name && p.frequency === frequency);
       if (plan && plan.checkSheetId) {
@@ -1587,7 +1767,8 @@
       }
 
       if (!checkSheet && state.checkSheets.length > 0) {
-        checkSheet = state.checkSheets[0];
+        // Try finding matching by station or pick the first check sheet
+        checkSheet = state.checkSheets.find(s => s.name.includes(machine.station)) || state.checkSheets[0];
       }
 
       state.currentCheckSheet = checkSheet;
@@ -1881,7 +2062,7 @@
 
       Swal.fire({
         title: 'กำลังบันทึกข้อมูล...',
-        text: 'กำลังประมวลผลรูปถ่ายและส่งข้อมูลไปยัง Google Sheets',
+        text: 'กำลังส่งข้อมูลไปยัง Google Sheets และอัปโหลดรูปภาพลง Google Drive',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
@@ -1965,23 +2146,48 @@
       });
     }
 
-    // ================= 4. DASHBOARD & DEFECTS =================
+    // ================= 4. DASHBOARD (WITH DATE PICKER) =================
     let lineChartInstance = null;
 
+    function setDashboardToday() {
+      state.dashboardSelectedDate = getTodayDateString();
+      document.getElementById('dashboard-date-picker').value = state.dashboardSelectedDate;
+      renderDashboard();
+    }
+
+    function changeDashboardDate(newDate) {
+      if (!newDate) return;
+      state.dashboardSelectedDate = newDate;
+      renderDashboard();
+    }
+
     function renderDashboard() {
+      const selectedDate = state.dashboardSelectedDate || getTodayDateString();
       const lineFilter = document.getElementById('dashboard-line-filter').value;
       const filteredMachines = lineFilter === 'ALL' 
         ? state.machines 
         : state.machines.filter(m => m.location === lineFilter);
 
       const totalCount = filteredMachines.length;
-      const todayStr = getTodayDateString();
       let doneCount = 0;
       let defectCount = 0;
 
+      // Format selected date in Thai
+      const parts = selectedDate.split('-');
+      const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateLabel = dObj.toLocaleDateString('th-TH', dateOptions);
+      const isToday = selectedDate === getTodayDateString();
+      
+      document.getElementById('current-date-label').innerHTML = `
+        <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
+        <span>ข้อมูลประจำ ${dateLabel}</span>
+        ${isToday ? '<span class="text-[10px] bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full ml-1">วันนี้</span>' : ''}
+      `;
+
       const machineStatuses = {};
       filteredMachines.forEach(m => {
-        const plan = state.plans.find(p => p.machineName === m.name && p.date === todayStr);
+        const plan = state.plans.find(p => p.machineName === m.name && p.date === selectedDate);
         const hasDefect = state.defects.some(d => d.machineName === m.name && d.status !== 'แก้ไขเรียบร้อย');
         
         if (hasDefect) {
@@ -1996,7 +2202,7 @@
         }
       });
 
-      const pendingCount = totalCount - doneCount;
+      const pendingCount = Math.max(0, totalCount - doneCount);
       const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
       document.getElementById('stat-percent').innerText = `${percent}%`;
@@ -2053,6 +2259,7 @@
 
       renderLineChart(isowaDone, bhsDone, yueliDone);
       renderDashboardRecentDefects();
+      lucide.createIcons();
     }
 
     function renderLineChart(isowa, bhs, yueli) {
@@ -2068,7 +2275,7 @@
         data: {
           labels: ['ISOWA (ตรวจแล้ว)', 'BHS (ตรวจแล้ว)', 'YUELI (ตรวจแล้ว)', 'ยังไม่ตรวจ'],
           datasets: [{
-            data: [isowa, bhs, yueli, 30 - (isowa + bhs + yueli)],
+            data: [isowa, bhs, yueli, Math.max(0, 30 - (isowa + bhs + yueli))],
             backgroundColor: ['#6366F1', '#3B82F6', '#0EA5E9', '#E2E8F0'],
             borderWidth: 0
           }]
@@ -2095,10 +2302,11 @@
       }
 
       recent.forEach(d => {
+        const displayImg = formatDriveImageUrl(d.imageUrl);
         const card = document.createElement('div');
         card.className = 'flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-xl';
         card.innerHTML = `
-          <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200'}" onclick="openLightbox('${d.imageUrl}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0">
+          <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0 border border-rose-200">
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-800 truncate">${d.machineName}</span>
@@ -2138,10 +2346,12 @@
         if (d.status === 'กำลังดำเนินการซ่อม') statusBadge = 'bg-amber-100 text-amber-800';
         if (d.status === 'แก้ไขเรียบร้อย') statusBadge = 'bg-emerald-100 text-emerald-700';
 
+        const displayImg = formatDriveImageUrl(d.imageUrl);
+
         card.innerHTML = `
           <div>
-            <div class="relative h-48 bg-slate-900 overflow-hidden cursor-pointer" onclick="openLightbox('${d.imageUrl}', '${d.machineName} - ${d.taskName}')">
-              <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500'}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+            <div class="relative h-48 bg-slate-900 overflow-hidden cursor-pointer" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')">
+              <img src="${displayImg}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
               <span class="absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-bold shadow ${statusBadge}">
                 ${d.status || 'รอดำเนินการแก้ไข'}
               </span>
@@ -2397,44 +2607,16 @@
       state.gasUrl = url;
       localStorage.setItem('PM_GAS_URL', url);
       Swal.fire({ icon: 'success', title: 'บันทึก URL สำเร็จ!', timer: 1500, showConfirmButton: false });
-    }
-
-    async function testGASConnection() {
-      const url = state.gasUrl || document.getElementById('gas-url-input').value.trim();
-      if (!url) {
-        Swal.fire({ icon: 'warning', title: 'กรุณากรอก URL ของ Google Apps Script ก่อน' });
-        return;
-      }
-
-      Swal.fire({ title: 'กำลังทดสอบ...', didOpen: () => Swal.showLoading() });
-      try {
-        const res = await fetch(url + '?action=getAll');
-        const json = await res.json();
-        if (json.status === 'success') {
-          Swal.fire({
-            icon: 'success',
-            title: 'เชื่อมต่อ Google Sheets สำเร็จ! 🟢',
-            text: 'ระบบสามารถอ่านและบันทึกข้อมูลแบบ Real-time ได้แล้ว'
-          });
-        } else {
-          throw new Error(json.message || 'Error');
-        }
-      } catch (err) {
-        Swal.fire({
-          icon: 'info',
-          title: 'ทดสอบการส่งข้อมูลแบบ Webhook',
-          text: 'หาก Web App ตั้งสิทธิ์เป็น Anyone แล้ว ข้อมูลจะสามารถส่งเข้า Google Sheets ได้ทันทีเมื่อกด Submit'
-        });
-      }
+      syncFromGoogleSheets(false);
     }
 
     function resetToInitialData() {
       Swal.fire({
-        title: 'ยืนยันการล้างประวัติ & ข้อมูลจำลอง?',
-        text: 'เช็คลิสต์จำลอง ประวัติเก่า และแผนงานเก่าจะถูกล้างออกทั้งหมด เพื่อเริ่มสร้างใหม่จากศูนย์',
+        title: 'ยืนยันการล้างแคชในเครื่อง?',
+        text: 'ระบบจะล้างแคชในเครื่องและดาวน์โหลดข้อมูลสดจาก Google Sheets ใหม่',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'ยืนยันล้างข้อมูลทั้งหมด',
+        confirmButtonText: 'ยืนยัน',
         cancelButtonText: 'ยกเลิก',
         confirmButtonColor: '#E11D48'
       }).then(res => {
@@ -2442,14 +2624,7 @@
           localStorage.removeItem('PM_CHECKSHEETS');
           localStorage.removeItem('PM_DEFECTS');
           localStorage.removeItem('PM_PLANS');
-          state.checkSheets = [];
-          state.defects = [];
-          state.plans = [];
-          initUI();
-          renderDashboard();
-          renderCheckSheetsGallery();
-          renderPlanner();
-          Swal.fire({ icon: 'success', title: 'ล้างข้อมูลเรียบร้อย พร้อมสร้างใหม่แล้วครับ!', timer: 1500, showConfirmButton: false });
+          syncFromGoogleSheets(false);
         }
       });
     }
