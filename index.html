@@ -550,7 +550,7 @@
                 <th class="px-4 py-3">ชื่อเครื่องจักร</th>
                 <th class="px-4 py-3">สายการผลิต</th>
                 <th class="px-4 py-3">สเตชั่น (Station)</th>
-                <th class="px-4 py-3">Checklist Key</th>
+                <th class="px-4 py-3">แบบฟอร์มเช็คชีทประจำเครื่อง</th>
                 <th class="px-4 py-3 text-center">QR Code</th>
                 <th class="px-4 py-3 text-right rounded-r-lg">จัดการ</th>
               </tr>
@@ -809,30 +809,70 @@
             localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
           }
 
-          // 3. Normalize PM Plans
+          // 3. Normalize PM Plans (Robust Multi-Key & Column-Order Normalizer)
           if (d.plans && Array.isArray(d.plans)) {
-            state.plans = d.plans.map(p => {
-              let pDate = p.Planned_Date || p.date || '';
-              if (pDate && pDate.includes('T')) {
-                const dt = new Date(pDate);
-                if (!isNaN(dt.getTime())) {
-                  pDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            state.plans = d.plans.map((p, idx) => {
+              const values = Object.values(p).map(v => String(v || '').trim());
+
+              let mName = '';
+              let sId = '';
+              let pDate = '';
+              let freq = 'รายวัน';
+              let status = 'pending';
+              let assignee = 'ทีม PM ประจำกะ';
+
+              // 1. Find CheckSheet ID (starts with CS- or matches existing checkSheets id)
+              const csMatch = values.find(v => v.startsWith('CS-') || state.checkSheets.some(cs => cs.id === v));
+              if (csMatch) {
+                sId = csMatch;
+              } else if (p.Check_Sheet_ID || p.checkSheetId) {
+                sId = p.Check_Sheet_ID || p.checkSheetId;
+              }
+
+              // 2. Find Machine Name (matches any state.machines name or id)
+              const mchMatch = values.find(v => state.machines.some(m => m.name.toLowerCase() === v.toLowerCase() || m.id.toLowerCase() === v.toLowerCase()));
+              if (mchMatch) {
+                mName = mchMatch;
+              } else {
+                mName = p.Machine_Name || p.Machine_ID || p.machineName || '';
+                if (mName.startsWith('CS-')) {
+                  if (!sId) sId = mName;
+                  mName = p.Machine_ID || '';
                 }
               }
-              let mName = p.Machine_ID || p.Machine_Name || p.machineName || '';
-              let sId = p.Check_Sheet_ID || p.checkSheetId || '';
-              if (mName.startsWith('CS-') && !sId) {
-                sId = mName;
-                mName = p.Machine_ID || '';
+
+              // 3. Find Date (YYYY-MM-DD or ISO string)
+              const dateMatch = values.find(v => /^\d{4}-\d{2}-\d{2}/.test(v));
+              if (dateMatch) {
+                if (dateMatch.includes('T')) {
+                  const dt = new Date(dateMatch);
+                  if (!isNaN(dt.getTime())) pDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                  else pDate = dateMatch.substring(0, 10);
+                } else {
+                  pDate = dateMatch.substring(0, 10);
+                }
+              } else {
+                pDate = p.Planned_Date || p.date || '';
               }
+
+              // 4. Find Frequency
+              const freqMatch = values.find(v => ['รายวัน', 'เริ่มสตาร์ทเครื่อง', 'ประจำสัปดาห์', 'ทุก 15 วัน', 'ประจำเดือน', 'ประจำ 3 เดือน', 'ประจำ 6 เดือน', 'ประจำปี'].includes(v));
+              if (freqMatch) freq = freqMatch;
+              else freq = p.Frequency || p.frequency || 'รายวัน';
+
+              // 5. Find Status
+              const statusMatch = values.find(v => ['pending', 'completed', 'รอตรวจ', 'เสร็จสิ้น'].includes(v.toLowerCase()));
+              if (statusMatch) status = statusMatch.toLowerCase();
+              else status = p.Status || p.status || 'pending';
+
               return {
-                id: p.Plan_ID || p.id,
+                id: p.Plan_ID || p.id || ('PLN-' + idx),
                 machineName: mName,
                 checkSheetId: sId,
-                frequency: p.Frequency || p.frequency || 'รายวัน',
+                frequency: freq,
                 date: pDate,
-                assignee: p.Assignee || p.assignee || 'ทีม PM',
-                status: p.Status || p.status || 'pending'
+                assignee: p.Assignee || p.assignee || assignee,
+                status: status
               };
             });
             localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
@@ -1761,7 +1801,7 @@
       });
     }
 
-    // ================= 3. FIELD INSPECTION (ENHANCED RESOLVER) =================
+    // ================= 3. FIELD INSPECTION (SMART CHECK SHEET RESOLVER) =================
     function loadChecklistForSelectedMachine(forcedMachineName = null) {
       const machineSelect = document.getElementById('inspect-machine-select');
       const machineName = forcedMachineName || machineSelect.value;
@@ -1777,10 +1817,14 @@
         return;
       }
 
-      // Find Machine
+      // 1. Find Machine (tolerant matching)
       const machine = state.machines.find(m => 
         m.name.toLowerCase() === machineName.toLowerCase() ||
-        m.id.toLowerCase() === machineName.toLowerCase()
+        m.id.toLowerCase() === machineName.toLowerCase() ||
+        m.name.toLowerCase().replace(/\s+/g, '') === machineName.toLowerCase().replace(/\s+/g, '') ||
+        m.name.toLowerCase().replace(/-/g, ' ') === machineName.toLowerCase().replace(/-/g, ' ') ||
+        machineName.toLowerCase().includes(m.name.toLowerCase()) ||
+        m.name.toLowerCase().includes(machineName.toLowerCase())
       );
       if (!machine) return;
 
@@ -1791,7 +1835,7 @@
       state.currentInspectResults = {};
       state.currentInspectRemarks = {};
 
-      // Populate CheckSheet dropdown if not already populated
+      // 2. Populate CheckSheet dropdown
       if (checkSheetSelect) {
         checkSheetSelect.innerHTML = '<option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>';
         state.checkSheets.forEach(s => {
@@ -1802,36 +1846,59 @@
         });
       }
 
-      // Smart Matching for Check Sheet:
+      // 3. SMART RESOLUTION FOR CHECK SHEET:
       let checkSheet = null;
 
-      // 1. From active PM Plan for this machine & frequency
-      const plan = state.plans.find(p => 
-        p.machineName && p.machineName.toLowerCase() === machine.name.toLowerCase() && 
-        (p.frequency === frequency || !p.frequency)
-      );
-      if (plan && plan.checkSheetId) {
-        checkSheet = state.checkSheets.find(s => s.id === plan.checkSheetId);
+      // Priority 1: Machine's explicit bound check sheet
+      if (machine.defaultCheckSheetId) {
+        checkSheet = state.checkSheets.find(s => s.id === machine.defaultCheckSheetId);
       }
 
-      // 2. From ANY plan for this machine
+      // Priority 2: From PM Plans created for this machine
       if (!checkSheet) {
-        const anyPlan = state.plans.find(p => p.machineName && p.machineName.toLowerCase() === machine.name.toLowerCase());
-        if (anyPlan && anyPlan.checkSheetId) {
-          checkSheet = state.checkSheets.find(s => s.id === anyPlan.checkSheetId);
+        const matchingPlans = state.plans.filter(p => 
+          p.machineName && (
+            p.machineName.toLowerCase() === machine.name.toLowerCase() ||
+            p.machineName.toLowerCase() === machine.id.toLowerCase()
+          ) && p.checkSheetId
+        );
+
+        const freqPlan = matchingPlans.find(p => p.frequency === frequency);
+        if (freqPlan && freqPlan.checkSheetId) {
+          checkSheet = state.checkSheets.find(s => s.id === freqPlan.checkSheetId);
+        } else if (matchingPlans.length > 0 && matchingPlans[0].checkSheetId) {
+          checkSheet = state.checkSheets.find(s => s.id === matchingPlans[0].checkSheetId);
         }
       }
 
-      // 3. Match by station name or checklistKey or machine location
-      if (!checkSheet) {
-        checkSheet = state.checkSheets.find(s => 
-          s.name.toLowerCase().includes(machine.station.toLowerCase()) ||
-          (machine.checklistKey && s.name.toLowerCase().includes(machine.checklistKey.toLowerCase())) ||
-          s.name.toLowerCase().includes(machine.location.toLowerCase())
-        );
+      // Priority 3: Smart Match by Station & Production Line in CheckSheet Name
+      // e.g. "Splicer&Mill roll" matches "Splicer&Mill roll-BHS (รายวัน)"
+      // e.g. "Single" matches "Single-BHS (รายวัน)"
+      if (!checkSheet && state.checkSheets.length > 0) {
+        const stationClean = machine.station.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locClean = machine.location.toLowerCase();
+        
+        // Exact Station + Line match
+        checkSheet = state.checkSheets.find(s => {
+          const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return (nameClean.includes(stationClean) || stationClean.includes(nameClean)) && s.name.toLowerCase().includes(locClean);
+        });
+
+        // Station name match
+        if (!checkSheet) {
+          checkSheet = state.checkSheets.find(s => {
+            const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return nameClean.includes(stationClean) || stationClean.includes(nameClean) || s.name.toLowerCase().includes(machine.station.toLowerCase());
+          });
+        }
+
+        // Line name match
+        if (!checkSheet) {
+          checkSheet = state.checkSheets.find(s => s.name.toLowerCase().includes(locClean));
+        }
       }
 
-      // 4. Fallback to first available checkSheet if exists
+      // Priority 4: Fallback to the first available check sheet
       if (!checkSheet && state.checkSheets.length > 0) {
         checkSheet = state.checkSheets[0];
       }
@@ -2503,6 +2570,26 @@
       mBody.innerHTML = '';
 
       state.machines.forEach(m => {
+        // Find bound check sheet
+        let boundSheet = null;
+        if (m.defaultCheckSheetId) {
+          boundSheet = state.checkSheets.find(s => s.id === m.defaultCheckSheetId);
+        }
+        if (!boundSheet) {
+          const plan = state.plans.find(p => p.machineName && p.machineName.toLowerCase() === m.name.toLowerCase() && p.checkSheetId);
+          if (plan) boundSheet = state.checkSheets.find(s => s.id === plan.checkSheetId);
+        }
+        if (!boundSheet && state.checkSheets.length > 0) {
+          boundSheet = state.checkSheets.find(s => s.name.toLowerCase().includes(m.station.toLowerCase()));
+        }
+
+        const optionsHtml = `
+          <option value="">-- ไม่ได้ผูกแบบฟอร์ม --</option>
+          ${state.checkSheets.map(s => `
+            <option value="${s.id}" ${(boundSheet && boundSheet.id === s.id) ? 'selected' : ''}>${s.name} (${s.items.length} จุด)</option>
+          `).join('')}
+        `;
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/80 transition';
         tr.innerHTML = `
@@ -2510,19 +2597,39 @@
           <td class="px-4 py-3 font-bold text-slate-800">${m.name}</td>
           <td class="px-4 py-3 text-slate-600"><span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-semibold">${m.location}</span></td>
           <td class="px-4 py-3 text-slate-600">${m.station}</td>
-          <td class="px-4 py-3 text-xs text-slate-500">${m.checklistKey}</td>
+          <td class="px-4 py-3">
+            <select onchange="updateMachineDefaultCheckSheet('${m.name}', this.value)" class="w-full max-w-[220px] px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white text-indigo-900 font-medium focus:ring-2 focus:ring-indigo-500">
+              ${optionsHtml}
+            </select>
+          </td>
           <td class="px-4 py-3 text-center">
             <button onclick="previewMachineQR('${m.name}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 mx-auto">
               <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR
             </button>
           </td>
           <td class="px-4 py-3 text-right">
-            <button onclick="quickInspect('${m.name}')" class="text-xs text-indigo-600 hover:underline font-semibold">ตรวจเช็ค</button>
+            <button onclick="quickInspect('${m.name}')" class="text-xs bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 px-2.5 py-1 rounded-lg font-bold transition">ตรวจเช็ค</button>
           </td>
         `;
         mBody.appendChild(tr);
       });
       lucide.createIcons();
+    }
+
+    function updateMachineDefaultCheckSheet(machineName, sheetId) {
+      const machine = state.machines.find(m => m.name === machineName);
+      if (machine) {
+        machine.defaultCheckSheetId = sheetId;
+        localStorage.setItem('PM_MACHINES', JSON.stringify(state.machines));
+        const sheet = state.checkSheets.find(s => s.id === sheetId);
+        Swal.fire({
+          icon: 'success',
+          title: 'ผูกเช็คชีทเรียบร้อย! 🟢',
+          text: `ผูก ${sheet ? sheet.name : 'ไม่มี'} กับเครื่อง ${machine.name} เรียบร้อยแล้ว เมื่อสแกน QR Code เช็คชีทชุดนี้จะโหลดขึ้นมาทันที`,
+          timer: 1800,
+          showConfirmButton: false
+        });
+      }
     }
 
     function openAddMachineModal() {
@@ -2667,7 +2774,7 @@
 
     function handleScannedQR(text) {
       if (!text) return;
-      let rawText = text.trim();
+      let rawText = String(text).trim();
       let queryMachine = '';
       
       if (rawText.includes('machine=')) {
@@ -2695,11 +2802,21 @@
       if (match) {
         switchTab('inspect');
         loadChecklistForSelectedMachine(match.name);
+        
+        const count = state.currentChecklistItems.length;
+        const sheetTitle = state.currentCheckSheet ? state.currentCheckSheet.name : 'ไม่มีแบบฟอร์ม';
+
         Swal.fire({
           icon: 'success',
-          title: `สแกนพบ: ${match.name}`,
-          text: `โหลดรายการเช็คชีทของ ${match.name} เรียบร้อยแล้ว`,
-          timer: 1500,
+          title: `สแกนพบ: ${match.name} 🟢`,
+          html: `
+            <div class="text-sm text-slate-600 mt-2 space-y-1">
+              <p><b>เครื่องจักร:</b> ${match.name} (${match.station} - ${match.location})</p>
+              <p><b>แบบฟอร์มเช็คชีท:</b> <span class="text-indigo-700 font-bold">${sheetTitle}</span></p>
+              <p class="text-emerald-600 font-semibold mt-1">📋 โหลดรายการตรวจเช็ค ${count} จุดตรวจเรียบร้อยแล้ว</p>
+            </div>
+          `,
+          timer: 2000,
           showConfirmButton: false
         });
       } else {
