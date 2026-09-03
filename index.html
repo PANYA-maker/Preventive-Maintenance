@@ -98,7 +98,7 @@
         <div class="flex items-center space-x-2">
           
           <!-- Cloud Sync Refresh Button -->
-          <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700 transition">
+          <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700 transition shadow">
             <i data-lucide="refresh-cw" id="sync-spin-icon" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">ซิงค์ชีต</span>
           </button>
@@ -161,7 +161,7 @@
             <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="scan" class="w-6 h-6 text-amber-500"></i> ตรวจเช็คเครื่องจักรหน้างาน (PM Inspection)
             </h2>
-            <p class="text-sm text-slate-500 mt-1">สแกน QR Code ประจำเครื่อง หรือเลือกเครื่องจักรเพื่อเริ่มการตรวจสอบ</p>
+            <p class="text-sm text-slate-500 mt-1">สแกน QR Code ประจำเครื่อง หรือเลือกเครื่องจักรเพื่อโหลดรายการเช็คชีท</p>
           </div>
 
           <div class="flex items-center gap-2">
@@ -171,7 +171,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <!-- 4-Column Responsive Inspection Setup -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ตรวจเช็ค *</label>
             <input type="text" id="inspector-name-input" placeholder="เช่น ปัญญา มีนาภา" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -179,7 +180,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">เลือกเครื่องจักร *</label>
-            <select id="inspect-machine-select" onchange="loadChecklistForSelectedMachine()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+            <select id="inspect-machine-select" onchange="loadChecklistForSelectedMachine()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium">
               <option value="">-- กรุณาเลือกเครื่องจักร --</option>
             </select>
           </div>
@@ -195,6 +196,13 @@
               <option value="ประจำ 3 เดือน">ประจำ 3 เดือน (Quarterly)</option>
               <option value="ประจำ 6 เดือน">ประจำ 6 เดือน (Semi-Annual)</option>
               <option value="ประจำปี">ประจำปี (Annual)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">แบบฟอร์มเช็คชีท (Check Sheet) *</label>
+            <select id="inspect-checksheet-select" onchange="onCheckSheetDropdownChange()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-indigo-900">
+              <option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>
             </select>
           </div>
         </div>
@@ -863,6 +871,11 @@
           renderDefectGallery();
           renderMasterMachinesTable();
 
+          // If inspecting a machine currently, reload checklist to catch updated check sheets!
+          if (state.currentInspectMachine) {
+            loadChecklistForSelectedMachine(state.currentInspectMachine.name);
+          }
+
           if (!isSilent) {
             Swal.fire({
               icon: 'success',
@@ -1010,6 +1023,17 @@
         select.appendChild(opt);
       });
 
+      const csSelect = document.getElementById('inspect-checksheet-select');
+      if (csSelect) {
+        csSelect.innerHTML = '<option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>';
+        state.checkSheets.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.innerText = `${s.name} (${s.items.length} จุดตรวจ)`;
+          csSelect.appendChild(opt);
+        });
+      }
+
       updateDefectBadge();
     }
 
@@ -1064,10 +1088,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const machineParam = urlParams.get('machine') || urlParams.get('m');
       if (machineParam) {
-        switchTab('inspect');
-        const select = document.getElementById('inspect-machine-select');
-        select.value = machineParam;
-        loadChecklistForSelectedMachine();
+        handleScannedQR(machineParam);
       }
     }
 
@@ -1287,6 +1308,7 @@
           }
           localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
           renderCheckSheetsGallery();
+          initUI();
 
           if (state.gasUrl && sheetObj) {
             fetch(state.gasUrl, {
@@ -1383,6 +1405,7 @@
       state.checkSheets.push(cloned);
       localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
       renderCheckSheetsGallery();
+      initUI();
       Swal.fire({ icon: 'success', title: 'ทำซ้ำเช็คชีทสำเร็จ!', timer: 1000, showConfirmButton: false });
     }
 
@@ -1403,6 +1426,7 @@
           state.checkSheets = state.checkSheets.filter(s => s.id !== sheetId);
           localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
           renderCheckSheetsGallery();
+          initUI();
           Swal.fire({ icon: 'success', title: 'ลบเช็คชีทเรียบร้อย', timer: 1000, showConfirmButton: false });
         }
       });
@@ -1737,10 +1761,12 @@
       });
     }
 
-    // ================= 3. FIELD INSPECTION =================
-    function loadChecklistForSelectedMachine() {
-      const machineName = document.getElementById('inspect-machine-select').value;
+    // ================= 3. FIELD INSPECTION (ENHANCED RESOLVER) =================
+    function loadChecklistForSelectedMachine(forcedMachineName = null) {
+      const machineSelect = document.getElementById('inspect-machine-select');
+      const machineName = forcedMachineName || machineSelect.value;
       const frequency = document.getElementById('inspect-frequency-select').value;
+      const checkSheetSelect = document.getElementById('inspect-checksheet-select');
 
       const container = document.getElementById('checklist-container');
       const emptyState = document.getElementById('checklist-empty-state');
@@ -1751,28 +1777,73 @@
         return;
       }
 
-      const machine = state.machines.find(m => m.name === machineName);
+      // Find Machine
+      const machine = state.machines.find(m => 
+        m.name.toLowerCase() === machineName.toLowerCase() ||
+        m.id.toLowerCase() === machineName.toLowerCase()
+      );
       if (!machine) return;
 
+      machineSelect.value = machine.name;
       state.currentInspectMachine = machine;
       state.currentInspectPhotos = {};
       state.currentInspectValues = {};
       state.currentInspectResults = {};
       state.currentInspectRemarks = {};
 
+      // Populate CheckSheet dropdown if not already populated
+      if (checkSheetSelect) {
+        checkSheetSelect.innerHTML = '<option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>';
+        state.checkSheets.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.innerText = `${s.name} (${s.items.length} จุดตรวจ)`;
+          checkSheetSelect.appendChild(opt);
+        });
+      }
+
+      // Smart Matching for Check Sheet:
       let checkSheet = null;
-      const plan = state.plans.find(p => p.machineName === machine.name && p.frequency === frequency);
+
+      // 1. From active PM Plan for this machine & frequency
+      const plan = state.plans.find(p => 
+        p.machineName && p.machineName.toLowerCase() === machine.name.toLowerCase() && 
+        (p.frequency === frequency || !p.frequency)
+      );
       if (plan && plan.checkSheetId) {
         checkSheet = state.checkSheets.find(s => s.id === plan.checkSheetId);
       }
 
-      if (!checkSheet && state.checkSheets.length > 0) {
-        // Try finding matching by station or pick the first check sheet
-        checkSheet = state.checkSheets.find(s => s.name.includes(machine.station)) || state.checkSheets[0];
+      // 2. From ANY plan for this machine
+      if (!checkSheet) {
+        const anyPlan = state.plans.find(p => p.machineName && p.machineName.toLowerCase() === machine.name.toLowerCase());
+        if (anyPlan && anyPlan.checkSheetId) {
+          checkSheet = state.checkSheets.find(s => s.id === anyPlan.checkSheetId);
+        }
       }
 
-      state.currentCheckSheet = checkSheet;
-      state.currentChecklistItems = checkSheet ? checkSheet.items : [];
+      // 3. Match by station name or checklistKey or machine location
+      if (!checkSheet) {
+        checkSheet = state.checkSheets.find(s => 
+          s.name.toLowerCase().includes(machine.station.toLowerCase()) ||
+          (machine.checklistKey && s.name.toLowerCase().includes(machine.checklistKey.toLowerCase())) ||
+          s.name.toLowerCase().includes(machine.location.toLowerCase())
+        );
+      }
+
+      // 4. Fallback to first available checkSheet if exists
+      if (!checkSheet && state.checkSheets.length > 0) {
+        checkSheet = state.checkSheets[0];
+      }
+
+      if (checkSheet) {
+        if (checkSheetSelect) checkSheetSelect.value = checkSheet.id;
+        state.currentCheckSheet = checkSheet;
+        state.currentChecklistItems = checkSheet.items || [];
+      } else {
+        state.currentCheckSheet = null;
+        state.currentChecklistItems = [];
+      }
 
       document.getElementById('current-inspect-machine-name').innerText = machine.name;
       document.getElementById('current-inspect-station-badge').innerText = machine.station;
@@ -1784,6 +1855,19 @@
       container.classList.remove('hidden');
     }
 
+    function onCheckSheetDropdownChange() {
+      const sheetId = document.getElementById('inspect-checksheet-select').value;
+      const checkSheet = state.checkSheets.find(s => s.id === sheetId);
+      if (checkSheet && state.currentInspectMachine) {
+        state.currentCheckSheet = checkSheet;
+        state.currentChecklistItems = checkSheet.items || [];
+        
+        document.getElementById('current-inspect-meta').innerText = `📋 ${checkSheet.name} | สาย: ${state.currentInspectMachine.location} | รอบ: ${document.getElementById('inspect-frequency-select').value} | ทั้งหมด ${state.currentChecklistItems.length} จุดตรวจ`;
+        
+        renderChecklistItems(state.currentChecklistItems);
+      }
+    }
+
     function renderChecklistItems(items) {
       const list = document.getElementById('checklist-items-list');
       list.innerHTML = '';
@@ -1792,7 +1876,7 @@
         list.innerHTML = `
           <div class="p-8 bg-white rounded-2xl border border-slate-100 text-center text-slate-500">
             <p class="font-bold text-slate-700">ยังไม่มีรายการเช็คชีทสำหรับเครื่องนี้</p>
-            <p class="text-xs text-slate-400 mt-1">หัวหน้างานสามารถสร้างแบบฟอร์มเช็คชีทและผูกกับเครื่องได้ในแท็บ "แบบฟอร์มเช็คชีท"</p>
+            <p class="text-xs text-slate-400 mt-1">กรุณาเลือกแบบฟอร์มเช็คชีทจากดรอปดาวน์ด้านบน หรือไปสร้างเช็คชีทใหม่ในแท็บ "แบบฟอร์มเช็คชีท"</p>
           </div>
         `;
         return;
@@ -2409,9 +2493,7 @@
 
     function quickInspect(machineName) {
       switchTab('inspect');
-      const select = document.getElementById('inspect-machine-select');
-      select.value = machineName;
-      loadChecklistForSelectedMachine();
+      loadChecklistForSelectedMachine(machineName);
     }
 
     // ================= 5. MASTER MACHINES =================
@@ -2556,7 +2638,7 @@
       }, 500);
     }
 
-    // ================= 6. QR SCANNER & UTILS =================
+    // ================= 6. QR SCANNER & ROBUST ROUTER =================
     function toggleQRScannerModal(show) {
       const modal = document.getElementById('qr-scanner-modal');
       if (show) {
@@ -2584,21 +2666,48 @@
     }
 
     function handleScannedQR(text) {
-      let machineName = text;
-      if (text.includes('machine=')) {
-        const parts = text.split('machine=');
-        machineName = decodeURIComponent(parts[1].split('&')[0]);
+      if (!text) return;
+      let rawText = text.trim();
+      let queryMachine = '';
+      
+      if (rawText.includes('machine=')) {
+        const parts = rawText.split('machine=');
+        queryMachine = decodeURIComponent(parts[1].split('&')[0]).replace(/\+/g, ' ');
+      } else if (rawText.includes('m=')) {
+        const parts = rawText.split('m=');
+        queryMachine = decodeURIComponent(parts[1].split('&')[0]).replace(/\+/g, ' ');
+      } else {
+        queryMachine = rawText;
       }
 
-      const match = state.machines.find(m => m.name.toLowerCase() === machineName.toLowerCase());
+      queryMachine = queryMachine.trim();
+
+      // Robust search in state.machines (case-insensitive, whitespace-insensitive, ID or Name)
+      const match = state.machines.find(m => 
+        m.name.toLowerCase() === queryMachine.toLowerCase() ||
+        m.id.toLowerCase() === queryMachine.toLowerCase() ||
+        m.name.toLowerCase().replace(/\s+/g, '') === queryMachine.toLowerCase().replace(/\s+/g, '') ||
+        m.name.toLowerCase().replace(/-/g, ' ') === queryMachine.toLowerCase().replace(/-/g, ' ') ||
+        queryMachine.toLowerCase().includes(m.name.toLowerCase()) ||
+        m.name.toLowerCase().includes(queryMachine.toLowerCase())
+      );
+
       if (match) {
         switchTab('inspect');
-        const select = document.getElementById('inspect-machine-select');
-        select.value = match.name;
-        loadChecklistForSelectedMachine();
-        Swal.fire({ icon: 'success', title: `สแกนพบ: ${match.name}`, timer: 1500, showConfirmButton: false });
+        loadChecklistForSelectedMachine(match.name);
+        Swal.fire({
+          icon: 'success',
+          title: `สแกนพบ: ${match.name}`,
+          text: `โหลดรายการเช็คชีทของ ${match.name} เรียบร้อยแล้ว`,
+          timer: 1500,
+          showConfirmButton: false
+        });
       } else {
-        Swal.fire({ icon: 'error', title: 'ไม่พบเครื่องจักรที่ตรงกับ QR Code นี้', text: text });
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบเครื่องจักรที่ตรงกับ QR Code นี้',
+          text: `ข้อความที่สแกนได้: "${rawText}"`
+        });
       }
     }
 
