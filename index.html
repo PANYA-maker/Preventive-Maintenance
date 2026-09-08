@@ -703,13 +703,18 @@
     </div>
   </div>
 
-  <!-- 3. Photo Lightbox Modal -->
-  <div id="lightbox-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4" onclick="closeLightbox()">
-    <div class="relative max-w-3xl max-h-[90vh] flex flex-col items-center">
-      <img id="lightbox-img" src="" class="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl">
-      <p id="lightbox-caption" class="text-white text-sm mt-3 text-center"></p>
-      <button class="absolute top-2 right-2 bg-black/60 text-white p-2 rounded-full hover:bg-black/80">
-        <i data-lucide="x" class="w-6 h-6"></i>
+  <!-- 3. Photo Lightbox Modal (Guaranteed Front Layer Z-Index: 999999) -->
+  <div id="lightbox-modal" class="fixed inset-0 bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm" style="z-index: 999999 !important;" onclick="closeLightbox()">
+    <div class="relative max-w-3xl max-h-[90vh] flex flex-col items-center p-2" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" class="max-w-full max-h-[78vh] rounded-2xl object-contain shadow-2xl border border-white/20 bg-black">
+      <div class="flex items-center justify-between w-full mt-3 px-2 gap-3">
+        <p id="lightbox-caption" class="text-white text-xs sm:text-sm font-medium text-left truncate flex-1"></p>
+        <button type="button" onclick="closeLightbox()" class="bg-white/20 hover:bg-rose-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0 border border-white/20 shadow">
+          <i data-lucide="x" class="w-4 h-4"></i> ปิดรูปภาพ
+        </button>
+      </div>
+      <button type="button" onclick="closeLightbox()" class="absolute -top-3 -right-3 bg-rose-600 hover:bg-rose-700 text-white p-2 rounded-full shadow-xl border-2 border-white transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
   </div>
@@ -1835,6 +1840,48 @@
       renderDashboard();
     }
 
+    // Strict Date Matching Helper (Supports YYYY-MM-DD, ISO UTC, and Thai Local strings)
+    function isDateMatch(entryDateOrTs, targetDateStr) {
+      if (!entryDateOrTs || !targetDateStr) return false;
+      const str = String(entryDateOrTs).trim();
+      if (str === targetDateStr) return true;
+      if (str.startsWith(targetDateStr)) return true;
+
+      const [targetYear, targetMonth, targetDay] = targetDateStr.split('-').map(Number);
+      
+      const dt = new Date(str);
+      if (!isNaN(dt.getTime())) {
+        if (dt.getFullYear() === targetYear && (dt.getMonth() + 1) === targetMonth && dt.getDate() === targetDay) {
+          return true;
+        }
+      }
+
+      const match = str.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (match) {
+        if (Number(match[1]) === targetYear && Number(match[2]) === targetMonth && Number(match[3]) === targetDay) {
+          return true;
+        }
+      }
+
+      const parts = str.split(/[\s,T]/)[0].split(/[\/\-.]/);
+      if (parts.length === 3) {
+        let pDay = parseInt(parts[0]);
+        let pMonth = parseInt(parts[1]);
+        let pYear = parseInt(parts[2]);
+        if (pYear > 2400) pYear -= 543;
+        if (parts[0].length === 4) {
+          pYear = parseInt(parts[0]);
+          pMonth = parseInt(parts[1]);
+          pDay = parseInt(parts[2]);
+        }
+        if (pYear === targetYear && pMonth === targetMonth && pDay === targetDay) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     function renderDashboard() {
       const selectedDate = state.dashboardSelectedDate || getTodayDateString();
       const lineFilter = document.getElementById('dashboard-line-filter').value;
@@ -1869,40 +1916,36 @@
         ${isToday ? '<span class="text-[10px] bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full ml-1">วันนี้</span>' : ''}
       `;
 
+      // 1. Calculate Machine Status STRICTLY for the Selected Date
       const machineStatuses = {};
       filteredMachines.forEach(m => {
         const mNameClean = m.name.toLowerCase().replace(/\s+/g, '');
 
-        // 1. Check in PM Plans
-        const plan = state.plans.find(p => 
-          p.machineName && 
-          p.machineName.toLowerCase().replace(/\s+/g, '') === mNameClean && 
-          p.date === selectedDate
-        );
-
-        // 2. Check in Active Defects
-        const hasDefect = state.defects.some(d => 
-          d.machineName && 
-          d.machineName.toLowerCase().replace(/\s+/g, '') === mNameClean && 
-          d.status !== 'แก้ไขเรียบร้อย'
-        );
-
-        // 3. Check in Inspection Logs (Tolerant matching)
-        const hasLog = state.inspectionLogs.some(l => {
+        // Find logs strictly belonging to the selected date
+        const logsOnDate = state.inspectionLogs.filter(l => {
           if (!l.machineName) return false;
           const logNameClean = l.machineName.toLowerCase().replace(/\s+/g, '');
           if (logNameClean !== mNameClean) return false;
-
-          if (l.date === selectedDate) return true;
-          if (l.timestamp && l.timestamp.includes(selectedDate)) return true;
-          return false;
+          return isDateMatch(l.date || l.timestamp, selectedDate);
         });
 
-        if (hasDefect) {
-          machineStatuses[m.name] = 'defect';
-          defectCount++;
-          doneCount++;
-        } else if ((plan && plan.status === 'completed') || hasLog) {
+        // Check if PM Plan was marked completed on this date
+        const planOnDate = state.plans.find(p => 
+          p.machineName && 
+          p.machineName.toLowerCase().replace(/\s+/g, '') === mNameClean && 
+          isDateMatch(p.date, selectedDate)
+        );
+
+        if (logsOnDate.length > 0) {
+          const hasFailItem = logsOnDate.some(l => l.result === 'ไม่ผ่าน');
+          if (hasFailItem) {
+            machineStatuses[m.name] = 'defect';
+            defectCount++;
+          } else {
+            machineStatuses[m.name] = 'done';
+            doneCount++;
+          }
+        } else if (planOnDate && planOnDate.status === 'completed') {
           machineStatuses[m.name] = 'done';
           doneCount++;
         } else {
@@ -1910,15 +1953,17 @@
         }
       });
 
-      const pendingCount = Math.max(0, totalCount - doneCount);
-      const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+      const inspectedTotal = doneCount + defectCount;
+      const pendingCount = Math.max(0, totalCount - inspectedTotal);
+      const percent = totalCount > 0 ? Math.round((inspectedTotal / totalCount) * 100) : 0;
 
       document.getElementById('stat-percent').innerText = `${percent}%`;
-      document.getElementById('stat-completed-ratio').innerText = `${doneCount} / ${totalCount} เครื่อง`;
+      document.getElementById('stat-completed-ratio').innerText = `${inspectedTotal} / ${totalCount} เครื่อง`;
       document.getElementById('stat-done').innerText = doneCount;
       document.getElementById('stat-pending').innerText = pendingCount;
       document.getElementById('stat-defects').innerText = defectCount;
 
+      // 2. Calculate Progress strictly for Selected Date by Line
       const isowaDone = state.machines.filter(m => m.location === 'ISOWA' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
       const bhsDone = state.machines.filter(m => m.location === 'BHS' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
       const yueliDone = state.machines.filter(m => m.location === 'YUELI' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
@@ -1927,39 +1972,45 @@
       document.getElementById('prog-bhs').innerText = `${bhsDone}/10`;
       document.getElementById('prog-yueli').innerText = `${yueliDone}/10`;
 
+      // 3. Render Station Status Cards with Clean Non-overlapping Badges
       const gridContainer = document.getElementById('machine-status-grid');
       gridContainer.innerHTML = '';
 
       filteredMachines.forEach(m => {
         const st = machineStatuses[m.name] || 'pending';
-        let bgClass = 'bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-300';
-        let dotClass = 'bg-slate-300';
-        let statusText = 'ยังไม่ตรวจ';
+        let cardBg = 'bg-white border-slate-200/80 hover:border-slate-300';
+        let badgeClass = 'bg-slate-100 text-slate-600 border border-slate-200';
+        let badgeText = '○ ยังไม่ตรวจ';
 
         if (st === 'done') {
-          bgClass = 'bg-emerald-50/80 border-emerald-300 text-emerald-900';
-          dotClass = 'bg-emerald-500';
-          statusText = 'ตรวจแล้ว';
+          cardBg = 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400';
+          badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+          badgeText = '✓ ตรวจแล้ว';
         } else if (st === 'defect') {
-          bgClass = 'bg-rose-50 border-rose-300 text-rose-900';
-          dotClass = 'bg-rose-500 animate-ping';
-          statusText = 'พบปัญหา';
+          cardBg = 'bg-rose-50/50 border-rose-300 hover:border-rose-400';
+          badgeClass = 'bg-rose-100 text-rose-800 border border-rose-200 font-bold';
+          badgeText = '⚠️ มีปัญหา';
         }
 
         const card = document.createElement('div');
-        card.className = `p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${bgClass} hover:shadow-md`;
+        card.className = `group p-3 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between ${cardBg} hover:shadow-md hover:-translate-y-0.5`;
         card.onclick = () => showMachineInspectionDetailModal(m.name);
         card.innerHTML = `
           <div>
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold">${m.name}</span>
-              <span class="w-2 h-2 rounded-full ${dotClass}"></span>
+            <div class="flex items-start justify-between gap-1">
+              <span class="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate">${m.name}</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold whitespace-nowrap ${badgeClass}">
+                ${badgeText}
+              </span>
             </div>
-            <p class="text-[10px] text-slate-500 truncate mt-0.5">${m.station}</p>
+            <p class="text-[11px] text-slate-500 truncate mt-1">${m.station}</p>
           </div>
-          <div class="mt-2 pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
-            <span class="font-medium">${statusText}</span>
-            <span class="text-indigo-600 font-bold hover:underline">ดูรายละเอียด &rarr;</span>
+          
+          <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+            <span class="text-slate-400 font-medium">${m.location}</span>
+            <span class="text-indigo-600 font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
+              ดูผลตรวจ <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            </span>
           </div>
         `;
         gridContainer.appendChild(card);
@@ -1977,29 +2028,18 @@
 
       const selectedDate = state.dashboardSelectedDate || getTodayDateString();
 
-      // Find logs on selected date
-      let machineLogs = state.inspectionLogs.filter(log => 
-        log.machineName.toLowerCase() === machine.name.toLowerCase() && 
-        (log.date === selectedDate || (log.timestamp && log.timestamp.includes(selectedDate)))
+      // Find logs STRICTLY on the selected date (No fallback to other dates)
+      const machineLogs = state.inspectionLogs.filter(log => 
+        log.machineName &&
+        log.machineName.toLowerCase().replace(/\s+/g, '') === machine.name.toLowerCase().replace(/\s+/g, '') && 
+        isDateMatch(log.date || log.timestamp, selectedDate)
       );
 
-      let isDateSpecific = true;
-      if (machineLogs.length === 0) {
-        // Fallback to latest logs for this machine
-        const allMachineLogs = state.inspectionLogs.filter(log => log.machineName.toLowerCase() === machine.name.toLowerCase());
-        if (allMachineLogs.length > 0) {
-          const latestTs = allMachineLogs[0].timestamp || allMachineLogs[0].date;
-          machineLogs = allMachineLogs.filter(log => (log.timestamp === latestTs || log.date === latestTs));
-          isDateSpecific = false;
-        }
-      }
-
-      const activeDefects = state.defects.filter(d => d.machineName.toLowerCase() === machine.name.toLowerCase() && d.status !== 'แก้ไขเรียบร้อย');
       let bodyHtml = '';
 
       if (machineLogs.length > 0) {
         const firstLog = machineLogs[0];
-        const hasDefect = machineLogs.some(l => l.result === 'ไม่ผ่าน') || activeDefects.length > 0;
+        const hasFailItem = machineLogs.some(l => l.result === 'ไม่ผ่าน');
         const passCount = machineLogs.filter(l => l.result === 'ผ่าน').length;
         const totalPoints = machineLogs.length;
 
@@ -2010,31 +2050,31 @@
               ${item.imageUrls.map((img, imgIdx) => {
                 const displayImg = formatDriveImageUrl(img);
                 return `
-                  <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${item.taskName} (${imgIdx + 1})')" class="w-14 h-14 rounded-lg object-cover border border-slate-200 cursor-pointer hover:opacity-80 transition flex-shrink-0 shadow-sm">
+                  <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${item.taskName} (${imgIdx + 1})')" class="w-16 h-16 rounded-xl object-cover border-2 border-slate-200 cursor-pointer hover:opacity-80 hover:scale-105 transition flex-shrink-0 shadow-sm bg-slate-100">
                 `;
               }).join('')}
             </div>
           ` : '';
 
           return `
-            <div class="p-3.5 rounded-xl border ${isPass ? 'bg-slate-50/70 border-slate-100' : 'bg-rose-50/50 border-rose-200'} space-y-1.5">
+            <div class="p-3.5 rounded-xl border ${isPass ? 'bg-slate-50/70 border-slate-100' : 'bg-rose-50/60 border-rose-200'} space-y-1.5">
               <div class="flex items-start justify-between gap-2">
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
                     <span class="text-xs font-bold text-slate-800">${item.taskName}</span>
-                    ${item.measuredValue ? `<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono font-bold">ค่า: ${item.measuredValue}</span>` : ''}
+                    ${item.measuredValue ? `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-mono font-bold">ค่าที่วัด: ${item.measuredValue}</span>` : ''}
                   </div>
                   <p class="text-[11px] text-slate-500 mt-0.5">เกณฑ์มาตรฐาน: ${item.standard || '-'}</p>
                 </div>
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm ${isPass ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm whitespace-nowrap ${isPass ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}">
                   ${isPass ? '✓ ผ่าน' : '✕ ไม่ผ่าน'}
                 </span>
               </div>
 
               ${item.remark ? `
-                <div class="text-xs text-rose-600 bg-rose-100/50 px-2.5 py-1.5 rounded-lg border border-rose-200/60 font-medium">
-                  ⚠️ <b>ข้อบกพร่อง:</b> ${item.remark}
+                <div class="text-xs text-rose-700 bg-rose-100/70 px-3 py-1.5 rounded-lg border border-rose-200 font-medium mt-1">
+                  ⚠️ <b>ข้อบกพร่อง / อาการ:</b> ${item.remark}
                 </div>
               ` : ''}
 
@@ -2046,34 +2086,27 @@
         bodyHtml = `
           <div class="text-left space-y-4 text-sm max-h-[75vh] overflow-y-auto pr-1">
             
-            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl space-y-2 shadow">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 rounded-2xl space-y-3 shadow">
               <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <h3 class="text-lg font-bold">${machine.name}</h3>
-                  <span class="bg-indigo-500/40 text-indigo-200 text-xs px-2 py-0.5 rounded-full border border-indigo-400/30">${machine.station} (${machine.location})</span>
+                  <span class="bg-indigo-500/40 text-indigo-200 text-xs px-2.5 py-0.5 rounded-full border border-indigo-400/30">${machine.station} (${machine.location})</span>
                 </div>
-                <span class="text-xs px-2.5 py-1 rounded-full font-bold shadow ${hasDefect ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
-                  ${hasDefect ? '⚠️ พบข้อบกพร่อง' : '✅ ผ่านการตรวจทั้งหมด'}
+                <span class="text-xs px-3 py-1 rounded-full font-bold shadow ${hasFailItem ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
+                  ${hasFailItem ? '⚠️ พบข้อบกพร่อง' : '✅ ผ่านการตรวจทั้งหมด'}
                 </span>
               </div>
 
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-indigo-200 pt-1 border-t border-white/10">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-indigo-200 pt-2 border-t border-white/10">
                 <div><span class="text-slate-400 block text-[10px]">ผู้ตรวจเช็ค:</span> <b class="text-white">${firstLog.inspector || 'ไม่ระบุ'}</b></div>
-                <div><span class="text-slate-400 block text-[10px]">วันที่ตรวจ:</span> <b class="text-white">${firstLog.timestamp || selectedDate}</b></div>
-                <div><span class="text-slate-400 block text-[10px]">ความถี่ / เช็คชีท:</span> <b class="text-white">${firstLog.frequency} (${firstLog.checkSheetName || 'แบบฟอร์มประจำเครื่อง'})</b></div>
+                <div><span class="text-slate-400 block text-[10px]">เวลาบันทึก:</span> <b class="text-white">${firstLog.timestamp || selectedDate}</b></div>
+                <div><span class="text-slate-400 block text-[10px]">แบบฟอร์ม:</span> <b class="text-white truncate block">${firstLog.checkSheetName || 'แบบฟอร์มประจำเครื่อง'}</b></div>
               </div>
             </div>
 
-            ${!isDateSpecific ? `
-              <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
-                <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
-                <span>(ในวันที่ ${selectedDate} ยังไม่มีการตรวจ แสดงผลจากการตรวจเช็คล่าสุดเมื่อ ${firstLog.timestamp || firstLog.date})</span>
-              </div>
-            ` : ''}
-
             <div class="flex items-center justify-between text-xs px-3 py-2 bg-slate-100 rounded-xl font-semibold text-slate-700">
-              <span>รายการจุดตรวจทั้งหมด (${totalPoints} จุด)</span>
-              <span class="text-emerald-700 font-bold">ผ่าน ${passCount} / ${totalPoints} จุด</span>
+              <span>รายการจุดตรวจประจำวัน (${totalPoints} จุด)</span>
+              <span class="${hasFailItem ? 'text-rose-700' : 'text-emerald-700'} font-bold">ผ่าน ${passCount} / ${totalPoints} จุด</span>
             </div>
 
             <div class="space-y-2.5">
@@ -2084,20 +2117,27 @@
         `;
       } else {
         bodyHtml = `
-          <div class="p-8 text-center space-y-3">
-            <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
+          <div class="p-8 text-center space-y-4">
+            <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-100">
               <i data-lucide="clock" class="w-8 h-8"></i>
             </div>
-            <h4 class="text-base font-bold text-slate-800">ยังไม่มีข้อมูลการตรวจเช็ค ${machine.name}</h4>
-            <p class="text-xs text-slate-500 max-w-sm mx-auto">ในวันที่ ${selectedDate} เครื่องจักรนี้ยังไม่ได้รับการบันทึกผลการตรวจเช็ค PM ประจำวัน</p>
+            <div>
+              <h4 class="text-base font-bold text-slate-800">ยังไม่มีข้อมูลการตรวจเช็ค ${machine.name}</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">ในวันที่ <b>${selectedDate}</b> เครื่องจักรนี้ยังไม่ได้รับการบันทึกผลการตรวจเช็ค PM ประจำวัน</p>
+            </div>
+            <div class="pt-2 flex justify-center gap-2">
+              <button onclick="quickInspect('${machine.name}'); Swal.close();" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i data-lucide="scan" class="w-4 h-4"></i> ตรวจเช็คเครื่องนี้ทันที
+              </button>
+            </div>
           </div>
         `;
       }
 
       Swal.fire({
-        title: `📋 รายงานผลการตรวจเช็ค: ${machine.name}`,
+        title: `📋 ผลตรวจเช็ค: ${machine.name}`,
         html: bodyHtml,
-        width: '750px',
+        width: '720px',
         showCancelButton: false,
         confirmButtonText: 'ปิดหน้าต่าง',
         confirmButtonColor: '#4F46E5',
@@ -2113,12 +2153,13 @@
         lineChartInstance.destroy();
       }
 
+      const totalChecked = isowa + bhs + yueli;
       lineChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: ['ISOWA (ตรวจแล้ว)', 'BHS (ตรวจแล้ว)', 'YUELI (ตรวจแล้ว)', 'ยังไม่ตรวจ'],
           datasets: [{
-            data: [isowa, bhs, yueli, Math.max(0, 30 - (isowa + bhs + yueli))],
+            data: [isowa, bhs, yueli, Math.max(0, 30 - totalChecked)],
             backgroundColor: ['#6366F1', '#3B82F6', '#0EA5E9', '#E2E8F0'],
             borderWidth: 0
           }]
@@ -2136,24 +2177,75 @@
 
     function renderDashboardRecentDefects() {
       const container = document.getElementById('dashboard-recent-defects');
+      if (!container) return;
       container.innerHTML = '';
 
-      const recent = state.defects.slice(0, 3);
-      if (recent.length === 0) {
-        container.innerHTML = `<div class="col-span-3 text-center py-6 text-slate-400 text-xs">ไม่พบรายการข้อบกพร่องที่คั่งค้าง ทุกระบบทำงานปกติ 🟢</div>`;
+      const selectedDate = state.dashboardSelectedDate || getTodayDateString();
+      const lineFilter = document.getElementById('dashboard-line-filter').value;
+
+      // 1. Gather defects strictly from state.defects AND failed inspection logs for this selected date and line
+      const defectsOnDate = [];
+
+      state.defects.forEach(d => {
+        if (!d.machineName) return;
+        const machine = state.machines.find(m => m.name.toLowerCase().replace(/\s+/g, '') === d.machineName.toLowerCase().replace(/\s+/g, ''));
+        if (lineFilter !== 'ALL' && machine && machine.location !== lineFilter) return;
+
+        if (isDateMatch(d.date || d.timestamp, selectedDate)) {
+          defectsOnDate.push({
+            machineName: d.machineName,
+            taskName: d.taskName,
+            remark: d.remark,
+            status: d.status || 'รอซ่อม',
+            imageUrl: d.imageUrl,
+            timestamp: d.timestamp
+          });
+        }
+      });
+
+      // Also pull failed items from inspectionLogs for this selected date
+      state.inspectionLogs.forEach(l => {
+        if (l.result === 'ไม่ผ่าน') {
+          const machine = state.machines.find(m => m.name.toLowerCase().replace(/\s+/g, '') === l.machineName.toLowerCase().replace(/\s+/g, ''));
+          if (lineFilter !== 'ALL' && machine && machine.location !== lineFilter) return;
+
+          if (isDateMatch(l.date || l.timestamp, selectedDate)) {
+            const alreadyExists = defectsOnDate.some(d => d.machineName === l.machineName && d.taskName === l.taskName);
+            if (!alreadyExists) {
+              defectsOnDate.push({
+                machineName: l.machineName,
+                taskName: l.taskName,
+                remark: l.remark || 'ตรวจไม่ผ่านเกณฑ์มาตรฐาน',
+                status: 'รอซ่อม',
+                imageUrl: (l.imageUrls && l.imageUrls.length > 0) ? l.imageUrls[0] : '',
+                timestamp: l.timestamp
+              });
+            }
+          }
+        }
+      });
+
+      if (defectsOnDate.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-3 text-center py-6 bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-xs">
+            <span class="inline-block p-2 bg-emerald-50 text-emerald-600 rounded-full mb-1">✓</span>
+            <p class="font-bold text-slate-600">ไม่พบรายการข้อบกพร่องประจำวันที่เลือก</p>
+            <p class="text-[11px] text-slate-400">ทุกจุดตรวจที่ได้รับการบันทึกในวันนี้ผ่านเกณฑ์มาตรฐานเรียบร้อย 🟢</p>
+          </div>
+        `;
         return;
       }
 
-      recent.forEach(d => {
+      defectsOnDate.slice(0, 6).forEach(d => {
         const displayImg = formatDriveImageUrl(d.imageUrl);
         const card = document.createElement('div');
-        card.className = 'flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-xl';
+        card.className = 'flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-xl hover:shadow-sm transition';
         card.innerHTML = `
-          <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0 border border-rose-200">
+          <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-xl object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0 border border-rose-200 bg-slate-100">
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-800 truncate">${d.machineName}</span>
-              <span class="text-[10px] bg-rose-200/60 text-rose-700 px-1.5 py-0.2 rounded font-semibold">${d.status || 'รอซ่อม'}</span>
+              <span class="text-[10px] bg-rose-100 text-rose-700 border border-rose-200 px-1.5 py-0.2 rounded font-semibold whitespace-nowrap">${d.status || 'รอซ่อม'}</span>
             </div>
             <p class="text-[11px] text-slate-600 font-medium truncate mt-0.5">${d.taskName}</p>
             <p class="text-[11px] text-rose-600 font-semibold truncate mt-0.5">⚠️ ${d.remark}</p>
