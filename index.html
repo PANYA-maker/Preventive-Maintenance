@@ -58,55 +58,55 @@
           </div>
         </div>
 
-        <!-- Desktop Navigation Links (Strictly Ordered & Responsive - Always Visible) -->
+        <!-- Desktop Navigation Links (Role-Protected) -->
         <nav class="hidden md:flex items-center space-x-1 lg:space-x-1.5 overflow-x-auto no-scrollbar py-1">
           
-          <!-- 1. สแกนตรวจเช็ค -->
+          <!-- 1. สแกนตรวจเช็ค (Public for Everyone) -->
           <button onclick="switchTab('inspect')" id="nav-inspect" class="nav-btn whitespace-nowrap flex-shrink-0 px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition flex items-center gap-1.5 bg-amber-500 text-slate-900 shadow-sm hover:bg-amber-400">
             <i data-lucide="qr-code" class="w-4 h-4"></i>
             <span>สแกนตรวจเช็ค</span>
           </button>
 
-          <!-- 2. แดชบอร์ด -->
-          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+          <!-- 2. แดชบอร์ด (Supervisor Only) -->
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
             <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
             <span>แดชบอร์ด</span>
           </button>
 
-          <!-- 3. รายการปัญหา -->
-          <button onclick="switchTab('defects')" id="nav-defects" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+          <!-- 3. รายการปัญหา (Supervisor Only) -->
+          <button onclick="switchTab('defects')" id="nav-defects" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
             <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
             <span>รายการปัญหา</span>
             <span id="defect-badge-count" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5">0</span>
           </button>
 
-          <!-- 4. วางแผน PM & ปฏิทิน -->
-          <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+          <!-- 4. วางแผน PM & ปฏิทิน (Supervisor Only) -->
+          <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
             <i data-lucide="calendar" class="w-4 h-4"></i>
             <span>วางแผน PM & ปฏิทิน</span>
           </button>
 
-          <!-- 5. แบบฟอร์มเช็คชีท -->
-          <button onclick="switchTab('checksheets')" id="nav-checksheets" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+          <!-- 5. แบบฟอร์มเช็คชีท (Supervisor Only) -->
+          <button onclick="switchTab('checksheets')" id="nav-checksheets" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
             <i data-lucide="clipboard-list" class="w-4 h-4"></i>
             <span>แบบฟอร์มเช็คชีท</span>
           </button>
 
-          <!-- 6. จัดการเครื่องจักร -->
-          <button onclick="switchTab('master')" id="nav-master" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+          <!-- 6. จัดการเครื่องจักร (Supervisor Only) -->
+          <button onclick="switchTab('master')" id="nav-master" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
             <i data-lucide="settings" class="w-4 h-4"></i>
             <span>จัดการเครื่องจักร</span>
           </button>
 
-          <!-- 7. Google Sheet / ตั้งค่า -->
-          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60" title="การเชื่อมต่อ Google Sheets">
+          <!-- 7. Google Sheet / ตั้งค่า (Supervisor Only) -->
+          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60" title="การเชื่อมต่อ Google Sheets">
             <i data-lucide="cloud" class="w-4 h-4"></i>
             <span>Google Sheet</span>
           </button>
 
         </nav>
 
-        <!-- Top Right Actions: Cloud Sync & Status -->
+        <!-- Top Right Actions: Cloud Sync & Role Auth -->
         <div class="flex items-center space-x-2 flex-shrink-0">
           <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-900/90 hover:bg-indigo-800 text-indigo-100 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700/60 transition shadow whitespace-nowrap">
             <i data-lucide="refresh-cw" id="sync-spin-icon" class="w-3.5 h-3.5"></i>
@@ -120,33 +120,46 @@
     </div>
   </header>
 
-  <!-- ================= MOBILE BOTTOM NAVIGATION (ALWAYS VISIBLE) ================= -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-1.5 py-1 shadow-xl flex justify-around">
+  <!-- ================= MOBILE BOTTOM NAVIGATION (ROLE ADAPTIVE) ================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-2 py-1.5 shadow-xl">
     
-    <div id="mobile-nav-supervisor" class="w-full flex items-center justify-around">
-      <button onclick="switchTab('inspect')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-amber-600 font-semibold" data-target="inspect">
+    <!-- Operator Mobile Nav (Focused on Inspection & Login) -->
+    <div id="mobile-nav-operator" class="w-full flex items-center justify-around">
+      <button onclick="switchTab('inspect')" class="flex items-center gap-2 py-2 px-6 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-full font-bold shadow-md transition transform active:scale-95">
+        <i data-lucide="qr-code" class="w-5 h-5"></i>
+        <span class="text-xs font-bold whitespace-nowrap">สแกนตรวจเช็ค PM</span>
+      </button>
+      <button onclick="promptSupervisorLogin()" class="flex items-center gap-1.5 py-2 px-4 text-indigo-700 font-semibold bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition">
+        <i data-lucide="lock" class="w-4 h-4 text-indigo-600"></i>
+        <span class="text-xs whitespace-nowrap">เข้าสู่ระบบหัวหน้า</span>
+      </button>
+    </div>
+
+    <!-- Supervisor Mobile Nav (Full Management Features) -->
+    <div id="mobile-nav-supervisor" class="hidden w-full flex items-center justify-around">
+      <button onclick="switchTab('inspect')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-amber-600 font-semibold" data-target="inspect">
         <i data-lucide="qr-code" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">สแกนตรวจ</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">สแกน</span>
       </button>
-      <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-indigo-600 font-semibold" data-target="dashboard">
+      <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-indigo-600 font-semibold" data-target="dashboard">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">แดชบอร์ด</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">แดชบอร์ด</span>
       </button>
-      <button onclick="switchTab('defects')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="defects">
+      <button onclick="switchTab('defects')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-slate-500" data-target="defects">
         <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">ปัญหา</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">ปัญหา</span>
       </button>
-      <button onclick="switchTab('planner')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="planner">
+      <button onclick="switchTab('planner')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-slate-500" data-target="planner">
         <i data-lucide="calendar" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">แผน PM</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">แผน PM</span>
       </button>
-      <button onclick="switchTab('checksheets')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="checksheets">
+      <button onclick="switchTab('checksheets')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-slate-500" data-target="checksheets">
         <i data-lucide="clipboard-list" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">เช็คชีท</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">เช็คชีท</span>
       </button>
-      <button onclick="switchTab('master')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="master">
+      <button onclick="switchTab('master')" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-slate-500" data-target="master">
         <i data-lucide="settings" class="w-4 h-4"></i>
-        <span class="text-[10px] mt-0.5 whitespace-nowrap">เครื่องจักร</span>
+        <span class="text-[9px] mt-0.5 whitespace-nowrap">เครื่องจักร</span>
       </button>
     </div>
 
@@ -378,7 +391,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="grid" class="w-5 h-5 text-indigo-600"></i> สถานะรายจุดตรวจเครื่องจักร (30 Stations)
+                <i data-lucide="grid" class="w-5 h-5 text-indigo-600"></i> สถานะรายจุดตรวจเครื่องจักร
               </h3>
               <p class="text-xs text-slate-500 mt-0.5">💡 คลิกที่กล่องเครื่องจักร เพื่อดูรายละเอียดผลตรวจเช็คและรูปภาพแต่ละจุด</p>
             </div>
@@ -388,7 +401,7 @@
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> ยังไม่ตรวจ</span>
             </div>
           </div>
-          <div id="machine-status-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-h-[360px] overflow-y-auto pr-1"></div>
+          <div id="machine-status-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 max-h-[380px] overflow-y-auto pr-1"></div>
         </div>
       </div>
 
@@ -738,7 +751,7 @@
 
     // ================= GLOBAL STATE =================
     let state = {
-      userRole: localStorage.getItem('PM_USER_ROLE') || 'supervisor',
+      userRole: localStorage.getItem('PM_USER_ROLE') || 'operator',
       supervisorPin: localStorage.getItem('PM_SUPERVISOR_PIN') || '1234',
       machines: [],
       checkSheets: [],
@@ -1067,52 +1080,84 @@
       const isSup = state.userRole === 'supervisor';
       const roleBadge = document.getElementById('role-badge-header');
       const authContainer = document.getElementById('auth-button-container');
+      const mobOperator = document.getElementById('mobile-nav-operator');
+      const mobSupervisor = document.getElementById('mobile-nav-supervisor');
 
       if (roleBadge) {
-        roleBadge.innerText = isSup ? 'ผู้ดูแล / หัวหน้างาน (Admin)' : 'พนักงานทั่วไป (Staff)';
+        roleBadge.innerText = isSup ? 'หัวหน้างาน (Supervisor)' : 'พนักงานตรวจเช็ค (Staff)';
         roleBadge.className = isSup 
           ? 'text-[11px] bg-emerald-400/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-medium border border-emerald-400/30 whitespace-nowrap'
           : 'text-[11px] bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full font-medium border border-amber-400/30 whitespace-nowrap';
       }
       
       if (authContainer) {
-        authContainer.innerHTML = `
-          <button onclick="toggleUserRole()" title="สลับสิทธิ์การใช้งาน" class="text-xs bg-indigo-900/90 hover:bg-indigo-800 border border-indigo-700 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition shadow whitespace-nowrap">
-            <i data-lucide="${isSup ? 'shield-check' : 'user'}" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span class="hidden sm:inline">${isSup ? 'โหมดหัวหน้างาน' : 'โหมดพนักงาน'}</span>
-          </button>
-        `;
+        if (isSup) {
+          authContainer.innerHTML = `
+            <button onclick="supervisorLogout()" title="ออกจากระบบหัวหน้างาน" class="text-xs bg-indigo-900/90 hover:bg-rose-900/80 border border-indigo-700 hover:border-rose-500 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition shadow whitespace-nowrap">
+              <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-400"></i>
+              <span class="hidden sm:inline">ออกจากระบบ</span>
+            </button>
+          `;
+        } else {
+          authContainer.innerHTML = `
+            <button onclick="promptSupervisorLogin()" title="เข้าสู่ระบบหัวหน้างานเพื่อดูแดชบอร์ดและจัดการระบบ" class="text-xs bg-amber-400 hover:bg-amber-300 text-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition shadow whitespace-nowrap">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">เข้าสู่ระบบหัวหน้า</span>
+            </button>
+          `;
+        }
       }
 
-      document.querySelectorAll('.supervisor-only').forEach(el => el.classList.remove('hidden'));
+      if (isSup) {
+        document.querySelectorAll('.supervisor-only').forEach(el => el.classList.remove('hidden'));
+        if (mobOperator) mobOperator.classList.add('hidden');
+        if (mobSupervisor) mobSupervisor.classList.remove('hidden');
+      } else {
+        document.querySelectorAll('.supervisor-only').forEach(el => el.classList.add('hidden'));
+        if (mobOperator) mobOperator.classList.remove('hidden');
+        if (mobSupervisor) mobSupervisor.classList.add('hidden');
+      }
+
       lucide.createIcons();
     }
 
-    function toggleUserRole() {
-      if (state.userRole === 'supervisor') {
-        state.userRole = 'operator';
-        localStorage.setItem('PM_USER_ROLE', 'operator');
-        applyUserRoleUI();
-        Swal.fire({ icon: 'info', title: 'เปลี่ยนเป็นโหมดพนักงานทั่วไป', timer: 1000, showConfirmButton: false });
-      } else {
-        state.userRole = 'supervisor';
-        localStorage.setItem('PM_USER_ROLE', 'supervisor');
-        applyUserRoleUI();
-        Swal.fire({ icon: 'success', title: 'เปิดโหมดหัวหน้างานเรียบร้อย', timer: 1000, showConfirmButton: false });
-      }
-    }
-
-    function promptSupervisorLogin() {
-      state.userRole = 'supervisor';
-      localStorage.setItem('PM_USER_ROLE', 'supervisor');
-      applyUserRoleUI();
+    function promptSupervisorLogin(targetTab = 'dashboard') {
+      Swal.fire({
+        title: '🔒 เข้าสู่ระบบหัวหน้างาน',
+        text: 'กรุณากรอกรหัส PIN (ค่าเริ่มต้น: 1234)',
+        input: 'password',
+        inputAttributes: {
+          maxlength: 6,
+          autocapitalize: 'off',
+          autocorrect: 'off',
+          style: 'text-align: center; font-size: 24px; letter-spacing: 6px;'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'เข้าสู่ระบบ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#4F46E5',
+        preConfirm: (pin) => {
+          if (pin === state.supervisorPin) return true;
+          Swal.showValidationMessage('รหัส PIN ไม่ถูกต้อง');
+          return false;
+        }
+      }).then((res) => {
+        if (res.isConfirmed) {
+          state.userRole = 'supervisor';
+          localStorage.setItem('PM_USER_ROLE', 'supervisor');
+          applyUserRoleUI();
+          switchTab(targetTab);
+          Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับหัวหน้างาน 🟢', timer: 1200, showConfirmButton: false });
+        }
+      });
     }
 
     function supervisorLogout() {
       state.userRole = 'operator';
       localStorage.setItem('PM_USER_ROLE', 'operator');
       applyUserRoleUI();
-      Swal.fire({ icon: 'info', title: 'ออกจากระบบเรียบร้อย', timer: 1000, showConfirmButton: false });
+      switchTab('inspect');
+      Swal.fire({ icon: 'info', title: 'ออกจากระบบเรียบร้อย (โหมดพนักงานตรวจเช็ค)', timer: 1200, showConfirmButton: false });
     }
 
     function saveSupervisorPin() {
@@ -1127,7 +1172,8 @@
     }
 
     function handleLogoClick() {
-      switchTab('dashboard');
+      if (state.userRole === 'supervisor') switchTab('dashboard');
+      else switchTab('inspect');
     }
 
     // ================= INITIALIZATION & NAVIGATION =================
@@ -1164,6 +1210,11 @@
     }
 
     function switchTab(tabId) {
+      if (state.userRole !== 'supervisor' && tabId !== 'inspect') {
+        promptSupervisorLogin(tabId);
+        return;
+      }
+
       state.activeTab = tabId;
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const activeEl = document.getElementById('tab-' + tabId);
@@ -1978,36 +2029,47 @@
 
       filteredMachines.forEach(m => {
         const st = machineStatuses[m.name] || 'pending';
-        let cardBg = 'bg-white border-slate-200/80 hover:border-slate-300';
-        let badgeClass = 'bg-slate-100 text-slate-600 border border-slate-200';
-        let badgeText = '○ ยังไม่ตรวจ';
+        let cardBg = 'bg-white border-slate-200/90 hover:border-indigo-300';
+        let badgeClass = 'bg-slate-100 text-slate-600 border border-slate-200/80';
+        let badgeDot = 'bg-slate-400';
+        let badgeText = 'ยังไม่ตรวจ';
 
         if (st === 'done') {
-          cardBg = 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400';
+          cardBg = 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-500';
           badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-          badgeText = '✓ ตรวจแล้ว';
+          badgeDot = 'bg-emerald-500';
+          badgeText = 'ตรวจแล้ว';
         } else if (st === 'defect') {
-          cardBg = 'bg-rose-50/50 border-rose-300 hover:border-rose-400';
+          cardBg = 'bg-rose-50/50 border-rose-300 hover:border-rose-500';
           badgeClass = 'bg-rose-100 text-rose-800 border border-rose-200 font-bold';
-          badgeText = '⚠️ มีปัญหา';
+          badgeDot = 'bg-rose-500 animate-ping';
+          badgeText = 'มีปัญหา';
         }
 
         const card = document.createElement('div');
-        card.className = `group p-3 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between ${cardBg} hover:shadow-md hover:-translate-y-0.5`;
+        card.className = `group p-3 sm:p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between ${cardBg} hover:shadow-md hover:-translate-y-0.5 min-w-0`;
         card.onclick = () => showMachineInspectionDetailModal(m.name);
         card.innerHTML = `
-          <div>
-            <div class="flex items-start justify-between gap-1">
-              <span class="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate">${m.name}</span>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold whitespace-nowrap ${badgeClass}">
+          <div class="space-y-1.5">
+            <!-- Machine Header: Name and Status Badge -->
+            <div class="flex items-start justify-between gap-1.5">
+              <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-indigo-600 transition leading-snug break-words flex-1">${m.name}</h4>
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${badgeClass}">
+                <span class="w-1.5 h-1.5 rounded-full ${badgeDot}"></span>
                 ${badgeText}
               </span>
             </div>
-            <p class="text-[11px] text-slate-500 truncate mt-1">${m.station}</p>
+            
+            <!-- Machine Station & Line Details -->
+            <div class="space-y-0.5">
+              <p class="text-[11px] font-medium text-slate-700 leading-tight">${m.station}</p>
+              <p class="text-[10px] text-slate-400 font-semibold">${m.location}</p>
+            </div>
           </div>
           
-          <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
-            <span class="text-slate-400 font-medium">${m.location}</span>
+          <!-- Card Footer Action -->
+          <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+            <span class="text-slate-400 font-medium">รายละเอียด</span>
             <span class="text-indigo-600 font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
               ดูผลตรวจ <i data-lucide="chevron-right" class="w-3 h-3"></i>
             </span>
