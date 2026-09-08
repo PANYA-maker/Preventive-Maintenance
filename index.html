@@ -39,71 +39,81 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- ================= TOP NAVIGATION BAR ================= -->
-  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+  <!-- ================= TOP NAVIGATION BAR (CLEAN & NON-OVERFLOWING) ================= -->
+  <header class="bg-indigo-950 text-white shadow-lg sticky top-0 z-40 border-b border-indigo-900/60">
+    <div class="max-w-[1440px] w-full mx-auto px-3 sm:px-6">
+      <div class="flex items-center justify-between h-16 gap-3">
         
         <!-- Logo & Title -->
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="handleLogoClick()">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-indigo-500 flex items-center justify-center shadow-md">
-            <i data-lucide="wrench" class="w-6 h-6 text-white"></i>
+        <div class="flex items-center space-x-2.5 cursor-pointer flex-shrink-0" onclick="handleLogoClick()">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-indigo-500 flex items-center justify-center shadow-md flex-shrink-0">
+            <i data-lucide="wrench" class="w-5 h-5 text-white"></i>
           </div>
-          <div>
-            <h1 class="text-base md:text-lg font-bold leading-tight flex items-center gap-2">
-              ระบบ PM ตรวจเช็คเครื่องจักร
-              <span id="role-badge-header" class="text-xs px-2 py-0.5 rounded-full font-normal">พนักงานทั่วไป</span>
-            </h1>
-            <p class="text-xs text-indigo-200">Daily Preventive Maintenance System</p>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 class="text-sm sm:text-base font-bold tracking-tight whitespace-nowrap">ระบบ PM เครื่องจักร</h1>
+              <span id="role-badge-header" class="text-[11px] px-2 py-0.5 rounded-full font-normal whitespace-nowrap">พนักงานทั่วไป</span>
+            </div>
+            <p class="text-[11px] text-indigo-300 hidden sm:block truncate">Daily Preventive Maintenance System</p>
           </div>
         </div>
 
-        <!-- Desktop Navigation Links (Role Controlled) -->
-        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
+        <!-- Desktop Navigation Links (Strictly Ordered & Responsive) -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-1.5 overflow-x-auto no-scrollbar py-1">
           
-          <!-- Scan & Inspect (Public for Everyone) -->
-          <button onclick="switchTab('inspect')" id="nav-inspect" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5 bg-amber-500 text-slate-900 shadow-md hover:bg-amber-400">
-            <i data-lucide="qr-code" class="w-4 h-4"></i> สแกนตรวจเช็ค
+          <!-- 1. สแกนตรวจเช็ค (Public for Everyone) -->
+          <button onclick="switchTab('inspect')" id="nav-inspect" class="nav-btn whitespace-nowrap flex-shrink-0 px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition flex items-center gap-1.5 bg-amber-500 text-slate-900 shadow-sm hover:bg-amber-400">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>
+            <span>สแกนตรวจเช็ค</span>
           </button>
 
-          <!-- Supervisor Only Tabs -->
-          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> แดชบอร์ด
-          </button>
-          
-          <button onclick="switchTab('checksheets')" id="nav-checksheets" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="clipboard-list" class="w-4 h-4"></i> แบบฟอร์มเช็คชีท
+          <!-- 2. แดชบอร์ด (Supervisor) -->
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>แดชบอร์ด</span>
           </button>
 
-          <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="calendar" class="w-4 h-4"></i> วางแผน PM & ปฏิทิน
+          <!-- 3. รายการปัญหา (Supervisor) -->
+          <button onclick="switchTab('defects')" id="nav-defects" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+            <span>รายการปัญหา</span>
+            <span id="defect-badge-count" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5">0</span>
           </button>
-          
-          <button onclick="switchTab('defects')" id="nav-defects" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="alert-triangle" class="w-4 h-4"></i> รายการปัญหา
-            <span id="defect-badge-count" class="bg-rose-500 text-white text-xs px-1.5 py-0.2 rounded-full font-bold">0</span>
+
+          <!-- 4. วางแผน PM & ปฏิทิน (Supervisor) -->
+          <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>วางแผน PM & ปฏิทิน</span>
           </button>
-          
-          <button onclick="switchTab('master')" id="nav-master" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="settings" class="w-4 h-4"></i> จัดการเครื่องจักร
+
+          <!-- 5. แบบฟอร์มเช็คชีท (Supervisor) -->
+          <button onclick="switchTab('checksheets')" id="nav-checksheets" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+            <span>แบบฟอร์มเช็คชีท</span>
           </button>
-          
-          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn supervisor-only hidden px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/50">
-            <i data-lucide="cloud" class="w-4 h-4"></i> Google Sheet
+
+          <!-- 6. จัดการเครื่องจักร (Supervisor) -->
+          <button onclick="switchTab('master')" id="nav-master" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+            <span>จัดการเครื่องจักร</span>
+          </button>
+
+          <!-- 7. Google Sheet / ตั้งค่า (Supervisor) -->
+          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn supervisor-only hidden whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl text-xs lg:text-sm font-medium transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-800/60" title="การเชื่อมต่อ Google Sheets">
+            <i data-lucide="cloud" class="w-4 h-4"></i>
+            <span>Google Sheet</span>
           </button>
 
         </nav>
 
         <!-- Top Right Actions: Cloud Sync & Role Switch -->
-        <div class="flex items-center space-x-2">
-          
-          <!-- Cloud Sync Refresh Button -->
-          <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700 transition shadow">
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <button onclick="syncFromGoogleSheets(false)" id="btn-top-sync" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets" class="bg-indigo-900/90 hover:bg-indigo-800 text-indigo-100 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-indigo-700/60 transition shadow whitespace-nowrap">
             <i data-lucide="refresh-cw" id="sync-spin-icon" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">ซิงค์ชีต</span>
           </button>
 
-          <div id="auth-button-container"></div>
+          <div id="auth-button-container" class="flex-shrink-0"></div>
         </div>
 
       </div>
@@ -111,51 +121,51 @@
   </header>
 
   <!-- ================= MOBILE BOTTOM NAVIGATION ================= -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-2 py-1 shadow-xl flex justify-around">
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-1.5 py-1 shadow-xl flex justify-around">
     
     <div id="mobile-nav-operator" class="w-full flex items-center justify-around py-1">
-      <button onclick="switchTab('inspect')" class="flex flex-col items-center py-1 px-4 bg-amber-500 text-slate-900 rounded-full font-bold shadow-lg">
-        <i data-lucide="qr-code" class="w-6 h-6"></i>
-        <span class="text-[11px]">สแกนตรวจเช็ค</span>
+      <button onclick="switchTab('inspect')" class="flex flex-col items-center py-1 px-5 bg-amber-500 text-slate-900 rounded-full font-bold shadow-md">
+        <i data-lucide="qr-code" class="w-5 h-5"></i>
+        <span class="text-[11px] whitespace-nowrap">สแกนตรวจเช็ค</span>
       </button>
       <button onclick="promptSupervisorLogin()" class="flex flex-col items-center py-1 px-3 text-indigo-700 font-semibold">
         <i data-lucide="lock" class="w-5 h-5"></i>
-        <span class="text-[10px] mt-0.5">เข้าสู่ระบบหัวหน้างาน</span>
+        <span class="text-[10px] mt-0.5 whitespace-nowrap">หัวหน้างานเข้าสู่ระบบ</span>
       </button>
     </div>
 
     <div id="mobile-nav-supervisor" class="hidden w-full flex items-center justify-around">
-      <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center py-1 px-2 text-indigo-600 font-semibold" data-target="dashboard">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-        <span class="text-[10px] mt-0.5">แดชบอร์ด</span>
+      <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-indigo-600 font-semibold" data-target="dashboard">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span class="text-[10px] mt-0.5 whitespace-nowrap">แดชบอร์ด</span>
       </button>
-      <button onclick="switchTab('checksheets')" class="mobile-nav-btn flex flex-col items-center py-1 px-2 text-slate-500" data-target="checksheets">
-        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-        <span class="text-[10px] mt-0.5">เช็คชีท</span>
+      <button onclick="switchTab('defects')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="defects">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        <span class="text-[10px] mt-0.5 whitespace-nowrap">ปัญหา</span>
       </button>
-      <button onclick="switchTab('planner')" class="mobile-nav-btn flex flex-col items-center py-1 px-2 text-slate-500" data-target="planner">
-        <i data-lucide="calendar" class="w-5 h-5"></i>
-        <span class="text-[10px] mt-0.5">แผน PM</span>
+      <button onclick="switchTab('inspect')" class="mobile-nav-btn flex flex-col items-center py-1.5 px-3 bg-amber-500 text-slate-900 rounded-full -mt-3 shadow-lg font-bold" data-target="inspect">
+        <i data-lucide="qr-code" class="w-5 h-5"></i>
+        <span class="text-[10px] whitespace-nowrap">สแกน</span>
       </button>
-      <button onclick="switchTab('inspect')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 bg-amber-500 text-slate-900 rounded-full -mt-4 shadow-lg font-bold" data-target="inspect">
-        <i data-lucide="qr-code" class="w-6 h-6"></i>
-        <span class="text-[10px]">สแกน</span>
+      <button onclick="switchTab('planner')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="planner">
+        <i data-lucide="calendar" class="w-4 h-4"></i>
+        <span class="text-[10px] mt-0.5 whitespace-nowrap">แผน PM</span>
       </button>
-      <button onclick="switchTab('defects')" class="mobile-nav-btn flex flex-col items-center py-1 px-2 text-slate-500" data-target="defects">
-        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-        <span class="text-[10px] mt-0.5">ปัญหา</span>
+      <button onclick="switchTab('checksheets')" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500" data-target="checksheets">
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+        <span class="text-[10px] mt-0.5 whitespace-nowrap">เช็คชีท</span>
       </button>
     </div>
 
   </nav>
 
   <!-- ================= MAIN APP CONTAINER ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 mb-16 md:mb-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3.5 sm:p-6 lg:p-8 mb-16 md:mb-6">
 
     <!-- ================= 1. TAB: FIELD INSPECTION & CAMERA (PUBLIC FOR EVERYONE) ================= -->
     <section id="tab-inspect" class="tab-content space-y-6">
       
-      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+      <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -172,7 +182,7 @@
         </div>
 
         <!-- 4-Column Responsive Inspection Setup -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ตรวจเช็ค *</label>
             <input type="text" id="inspector-name-input" placeholder="เช่น ปัญญา มีนาภา" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -212,7 +222,7 @@
         
         <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xl">
+            <div class="w-12 h-12 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xl flex-shrink-0">
               PM
             </div>
             <div>
@@ -235,7 +245,7 @@
 
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="text-xs text-slate-500">
-            <p class="font-medium text-slate-700">📌 บันทึกผลการตรวจเช็คลง Google Sheets & Google Drive</p>
+            <p class="font-medium text-slate-700">📌 บันทึกผลการตรวจเช็คลง Google Sheets & Google Drive (บีบอัดภาพความเร็วสูง)</p>
             <p>ระบบจะสร้าง Log_ID และจัดเก็บรูปภาพเข้าโฟลเดอร์ Google Drive โดยอัตโนมัติ</p>
           </div>
           <button onclick="submitInspection()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95">
@@ -255,7 +265,7 @@
 
     </section>
 
-    <!-- ================= 2. TAB: DASHBOARD (SUPERVISOR ONLY - WITH DATE PICKER) ================= -->
+    <!-- ================= 2. TAB: DASHBOARD (SUPERVISOR ONLY - WITH INTERACTIVE DETAILS) ================= -->
     <section id="tab-dashboard" class="tab-content supervisor-only hidden space-y-6">
       
       <!-- Dashboard Top Header Card -->
@@ -370,16 +380,19 @@
 
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="grid" class="w-5 h-5 text-indigo-600"></i> สถานะรายจุดตรวจเครื่องจักร (30 Stations)
-            </h3>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="grid" class="w-5 h-5 text-indigo-600"></i> สถานะรายจุดตรวจเครื่องจักร (30 Stations)
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">💡 คลิกที่กล่องเครื่องจักร เพื่อดูรายละเอียดผลตรวจเช็คและรูปภาพแต่ละจุด</p>
+            </div>
             <div class="flex items-center gap-2 text-xs">
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ตรวจแล้ว</span>
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> มีปัญหา</span>
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> ยังไม่ตรวจ</span>
             </div>
           </div>
-          <div id="machine-status-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-h-[340px] overflow-y-auto pr-1"></div>
+          <div id="machine-status-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-h-[360px] overflow-y-auto pr-1"></div>
         </div>
       </div>
 
@@ -398,28 +411,31 @@
 
     </section>
 
-    <!-- ================= 3. TAB: CHECK SHEET BUILDER (SUPERVISOR ONLY) ================= -->
-    <section id="tab-checksheets" class="tab-content supervisor-only hidden space-y-6">
+    <!-- ================= 3. TAB: DEFECTS & ISSUES GALLERY (SUPERVISOR ONLY) ================= -->
+    <section id="tab-defects" class="tab-content supervisor-only hidden space-y-6">
       
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="clipboard-list" class="w-6 h-6 text-indigo-600"></i> จัดการแบบฟอร์มเช็คชีท (Check Sheet Templates)
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-500"></i> รายการปัญหาและภาพถ่ายจุดที่พบข้อบกพร่อง
           </h2>
-          <p class="text-sm text-slate-500 mt-1">สร้างแบบฟอร์มเช็คชีท กำหนดจุดตรวจ เกณฑ์มาตรฐาน และเงื่อนไขบังคับถ่ายรูป / บังคับระบุค่า</p>
+          <p class="text-sm text-slate-500 mt-1">ติดตามรายการที่ตรวจไม่ผ่านและสถานะการซ่อมบำรุง</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="openCheckSheetBuilderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md transition">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i> สร้างแบบฟอร์มเช็คชีทใหม่
-          </button>
+          <select id="defect-status-filter" onchange="renderDefectGallery()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium">
+            <option value="ALL">สถานะทั้งหมด</option>
+            <option value="รอดำเนินการแก้ไข">รอดำเนินการแก้ไข</option>
+            <option value="กำลังดำเนินการซ่อม">กำลังดำเนินการซ่อม</option>
+            <option value="แก้ไขเรียบร้อย">แก้ไขเรียบร้อย</option>
+          </select>
         </div>
       </div>
 
-      <div id="checksheets-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <div id="defects-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
     </section>
 
-    <!-- ================= 4. TAB: PM PLANNER & CALENDAR (SUPERVISOR ONLY) ================= -->
+    <!-- ================= 4. TAB: PM PLANNER & CALENDAR (SUPERVISOR ONLY - WITH LINE FILTER) ================= -->
     <section id="tab-planner" class="tab-content supervisor-only hidden space-y-6">
       
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -430,6 +446,15 @@
           <p class="text-sm text-slate-500 mt-1">นำแบบฟอร์มเช็คชีทที่สร้างไว้ มาผูกกับเครื่องจักร กำหนดความถี่ และลงปฏิทินอัตโนมัติ</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          
+          <!-- Line Filter for Planner -->
+          <select id="planner-line-filter" onchange="renderPlanner()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <option value="ALL">สายการผลิตทั้งหมด (All Lines)</option>
+            <option value="ISOWA">สาย ISOWA (10 เครื่อง)</option>
+            <option value="BHS">สาย BHS (10 เครื่อง)</option>
+            <option value="YUELI">สาย YUELI (10 เครื่อง)</option>
+          </select>
+
           <div class="bg-slate-100 p-1 rounded-xl flex">
             <button onclick="setPlannerView('calendar')" id="btn-view-cal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white shadow-sm text-indigo-900 transition">
               มุมมองปฏิทิน (Monthly)
@@ -473,7 +498,7 @@
       <!-- Daily Matrix Table View -->
       <div id="planner-matrix-view" class="hidden bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-          <h3 class="text-base font-bold text-slate-900">ตารางความถี่และแผนตรวจเช็ค 30 เครื่องจักร</h3>
+          <h3 class="text-base font-bold text-slate-900">ตารางความถี่และแผนตรวจเช็คเครื่องจักร</h3>
           <div class="text-xs text-slate-500">ความถี่: เริ่มสตาร์ทเครื่อง / รายวัน / ประจำสัปดาห์ / ประจำเดือน</div>
         </div>
         <div class="overflow-x-auto">
@@ -497,27 +522,33 @@
 
     </section>
 
-    <!-- ================= 5. TAB: DEFECTS & ISSUES GALLERY (SUPERVISOR ONLY) ================= -->
-    <section id="tab-defects" class="tab-content supervisor-only hidden space-y-6">
+    <!-- ================= 5. TAB: CHECK SHEET BUILDER (SUPERVISOR ONLY - WITH LINE FILTER) ================= -->
+    <section id="tab-checksheets" class="tab-content supervisor-only hidden space-y-6">
       
-      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-500"></i> รายการปัญหาและภาพถ่ายจุดที่พบข้อบกพร่อง
+            <i data-lucide="clipboard-list" class="w-6 h-6 text-indigo-600"></i> จัดการแบบฟอร์มเช็คชีท (Check Sheet Templates)
           </h2>
-          <p class="text-sm text-slate-500 mt-1">ติดตามรายการที่ตรวจไม่ผ่านและสถานะการซ่อมบำรุง</p>
+          <p class="text-sm text-slate-500 mt-1">สร้างแบบฟอร์มเช็คชีท กำหนดจุดตรวจ เกณฑ์มาตรฐาน และเงื่อนไขบังคับถ่ายรูป / บังคับระบุค่า</p>
         </div>
-        <div class="flex items-center gap-2">
-          <select id="defect-status-filter" onchange="renderDefectGallery()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            <option value="ALL">สถานะทั้งหมด</option>
-            <option value="รอดำเนินการแก้ไข">รอดำเนินการแก้ไข</option>
-            <option value="กำลังดำเนินการซ่อม">กำลังดำเนินการซ่อม</option>
-            <option value="แก้ไขเรียบร้อย">แก้ไขเรียบร้อย</option>
+        <div class="flex flex-wrap items-center gap-2">
+          
+          <!-- Line Filter for Check Sheets -->
+          <select id="checksheet-line-filter" onchange="renderCheckSheetsGallery()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <option value="ALL">ทุกสายการผลิต / ทุกแผนก</option>
+            <option value="ISOWA">สาย ISOWA</option>
+            <option value="BHS">สาย BHS</option>
+            <option value="YUELI">สาย YUELI</option>
           </select>
+
+          <button onclick="openCheckSheetBuilderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md transition">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> สร้างแบบฟอร์มเช็คชีทใหม่
+          </button>
         </div>
       </div>
 
-      <div id="defects-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div id="checksheets-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
     </section>
 
@@ -530,7 +561,7 @@
             <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="database" class="w-6 h-6 text-indigo-600"></i> จัดการเครื่องจักรและพิมพ์สติ๊กเกอร์ QR Code
             </h2>
-            <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อเครื่องจักร 30 เครื่อง และพิมพ์ป้าย QR Code</p>
+            <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อเครื่องจักร 30 เครื่อง ผูกเช็คชีทประจำเครื่อง และพิมพ์ป้าย QR Code</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="printAllQRCodes()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow transition">
@@ -612,7 +643,7 @@
 
   <!-- ================= MODALS & OVERLAYS ================= -->
 
-  <!-- 1. QR Scanner Modal -->
+  <!-- 1. QR Scanner Modal (Multi-Mode: Live Camera + File Upload + Quick Select) -->
   <div id="qr-scanner-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-2xl overflow-hidden shadow-2xl space-y-4 p-5">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -623,8 +654,30 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-900 min-h-[260px]"></div>
-      <p class="text-xs text-center text-slate-500">ส่องกล้องไปที่แผ่น QR Code ที่ติดอยู่หน้าเครื่องจักรเพื่อโหลดรายการเช็คชีทอัตโนมัติ</p>
+
+      <!-- Live Camera Stream -->
+      <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-950 min-h-[220px]"></div>
+      
+      <!-- Hidden temp reader for file scan -->
+      <div id="qr-reader-temp" class="hidden"></div>
+
+      <!-- Option 2: Upload/Snap QR image directly -->
+      <div class="space-y-2 pt-1">
+        <input type="file" id="qr-file-input" accept="image/*" capture="environment" onchange="handleQRFileInput(event)" class="hidden">
+        <button onclick="document.getElementById('qr-file-input').click()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition border border-slate-200">
+          <i data-lucide="image" class="w-4 h-4 text-indigo-600"></i> ถ่ายรูป หรือ เลือกภาพ QR Code จากแกลเลอรี (สแกนจากภาพ)
+        </button>
+      </div>
+
+      <!-- Option 3: Quick Select Fallback -->
+      <div class="pt-3 border-t border-slate-100 text-left">
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">⚡ หรือเลือกเครื่องจักรโดยตรง:</label>
+        <select id="qr-modal-machine-select" onchange="if(this.value){handleScannedQR(this.value); toggleQRScannerModal(false);}" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white text-indigo-900 font-bold focus:ring-2 focus:ring-indigo-500">
+          <option value="">-- เลือกเครื่องจักร --</option>
+        </select>
+      </div>
+
+      <p class="text-[11px] text-center text-slate-400">ส่องกล้องไปที่แผ่น QR Code ที่ติดหน้าเครื่อง หรือใช้ปุ่มถ่ายภาพเพื่อโหลดเช็คชีททันที</p>
     </div>
   </div>
 
@@ -690,6 +743,7 @@
       checkSheets: [],
       defects: [],
       plans: [],
+      inspectionLogs: [],
       activeTab: 'inspect',
       dashboardSelectedDate: getTodayDateString(),
       currentInspectMachine: null,
@@ -732,6 +786,7 @@
       const savedCheckSheets = localStorage.getItem('PM_CHECKSHEETS');
       const savedDefects = localStorage.getItem('PM_DEFECTS');
       const savedPlans = localStorage.getItem('PM_PLANS');
+      const savedLogs = localStorage.getItem('PM_INSPECTION_LOGS');
 
       if (savedMachines) state.machines = JSON.parse(savedMachines);
       else if (window.INITIAL_DATA && window.INITIAL_DATA.machines) state.machines = window.INITIAL_DATA.machines;
@@ -745,6 +800,9 @@
 
       if (savedPlans) state.plans = JSON.parse(savedPlans);
       else state.plans = [];
+
+      if (savedLogs) state.inspectionLogs = JSON.parse(savedLogs);
+      else state.inspectionLogs = [];
 
       document.getElementById('gas-url-input').value = state.gasUrl;
       document.getElementById('supervisor-pin-input').value = state.supervisorPin;
@@ -769,163 +827,233 @@
       }
 
       try {
-        const response = await fetch(url + '?action=getAll');
-        const result = await response.json();
+    // ================= REAL-TIME GOOGLE SHEETS SYNC (ROBUST PARALLEL FETCH) =================
+    async function syncFromGoogleSheets(isSilent = false) {
+      const url = state.gasUrl || DEFAULT_GAS_URL;
+      if (!url) return;
 
-        if (result.status === 'success' && result.data) {
-          const d = result.data;
+      const spinIcon = document.getElementById('sync-spin-icon');
+      if (spinIcon) spinIcon.classList.add('animate-spin-slow');
 
-          // 1. Normalize Machines
-          if (d.machines && Array.isArray(d.machines) && d.machines.length > 0) {
-            state.machines = d.machines.map((m, idx) => ({
-              id: m.Machine_ID || m.id || ('MCH-' + String(idx + 1).padStart(3, '0')),
-              name: m.Machine_Name || m.name || '',
-              station: m.Station || m.station || '',
-              location: m.Location || m.location || '',
-              checklistKey: m.Checklist_Key || m.checklistKey || '',
-              status: m.Status || m.status || 'Active'
-            }));
-            localStorage.setItem('PM_MACHINES', JSON.stringify(state.machines));
-          }
+      if (!isSilent) {
+        Swal.fire({
+          title: 'กำลังเชื่อมต่อ Google Sheets...',
+          text: 'กำลังดึงข้อมูลเครื่องจักร แบบฟอร์มเช็คชีท ประวัติการตรวจ และแผนงานล่าสุด',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+      }
 
-          // 2. Normalize Check Sheets
-          if (d.checkSheets && Array.isArray(d.checkSheets)) {
-            state.checkSheets = d.checkSheets.map(s => {
-              let effDate = s.Effective_Date || s.effectiveDate || '';
-              if (effDate && effDate.includes('T')) effDate = effDate.substring(0, 10);
-              return {
-                id: s.Sheet_ID || s.id,
-                name: s.Sheet_Name || s.name || '',
-                department: s.Department || s.department || '',
-                effectiveDate: effDate || getTodayDateString(),
-                items: (s.items || []).map(it => ({
-                  taskName: it.taskName || it.Task_Name || '',
-                  standard: it.standard || it.Standard_Criteria || '',
-                  forcePhoto: it.forcePhoto || it.Force_Photo || 'ไม่บังคับ',
-                  forceValue: it.forceValue || it.Force_Value || 'ไม่บังคับ'
-                }))
-              };
-            });
-            localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
-          }
+      try {
+        // Fetch getAll and getLogs in parallel for 100% data completeness
+        const [resAll, resLogs] = await Promise.all([
+          fetch(url + '?action=getAll').then(r => r.json()).catch(() => null),
+          fetch(url + '?action=getLogs').then(r => r.json()).catch(() => null)
+        ]);
 
-          // 3. Normalize PM Plans (Robust Multi-Key & Column-Order Normalizer)
-          if (d.plans && Array.isArray(d.plans)) {
-            state.plans = d.plans.map((p, idx) => {
-              const values = Object.values(p).map(v => String(v || '').trim());
+        const d = (resAll && resAll.status === 'success' && resAll.data) ? resAll.data : {};
+        const rawLogs = (resLogs && resLogs.status === 'success' && resLogs.data && resLogs.data.logs) 
+          ? resLogs.data.logs 
+          : (d.logs || []);
 
-              let mName = '';
-              let sId = '';
-              let pDate = '';
-              let freq = 'รายวัน';
-              let status = 'pending';
-              let assignee = 'ทีม PM ประจำกะ';
-
-              // 1. Find CheckSheet ID (starts with CS- or matches existing checkSheets id)
-              const csMatch = values.find(v => v.startsWith('CS-') || state.checkSheets.some(cs => cs.id === v));
-              if (csMatch) {
-                sId = csMatch;
-              } else if (p.Check_Sheet_ID || p.checkSheetId) {
-                sId = p.Check_Sheet_ID || p.checkSheetId;
-              }
-
-              // 2. Find Machine Name (matches any state.machines name or id)
-              const mchMatch = values.find(v => state.machines.some(m => m.name.toLowerCase() === v.toLowerCase() || m.id.toLowerCase() === v.toLowerCase()));
-              if (mchMatch) {
-                mName = mchMatch;
-              } else {
-                mName = p.Machine_Name || p.Machine_ID || p.machineName || '';
-                if (mName.startsWith('CS-')) {
-                  if (!sId) sId = mName;
-                  mName = p.Machine_ID || '';
-                }
-              }
-
-              // 3. Find Date (YYYY-MM-DD or ISO string)
-              const dateMatch = values.find(v => /^\d{4}-\d{2}-\d{2}/.test(v));
-              if (dateMatch) {
-                if (dateMatch.includes('T')) {
-                  const dt = new Date(dateMatch);
-                  if (!isNaN(dt.getTime())) pDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-                  else pDate = dateMatch.substring(0, 10);
-                } else {
-                  pDate = dateMatch.substring(0, 10);
-                }
-              } else {
-                pDate = p.Planned_Date || p.date || '';
-              }
-
-              // 4. Find Frequency
-              const freqMatch = values.find(v => ['รายวัน', 'เริ่มสตาร์ทเครื่อง', 'ประจำสัปดาห์', 'ทุก 15 วัน', 'ประจำเดือน', 'ประจำ 3 เดือน', 'ประจำ 6 เดือน', 'ประจำปี'].includes(v));
-              if (freqMatch) freq = freqMatch;
-              else freq = p.Frequency || p.frequency || 'รายวัน';
-
-              // 5. Find Status
-              const statusMatch = values.find(v => ['pending', 'completed', 'รอตรวจ', 'เสร็จสิ้น'].includes(v.toLowerCase()));
-              if (statusMatch) status = statusMatch.toLowerCase();
-              else status = p.Status || p.status || 'pending';
-
-              return {
-                id: p.Plan_ID || p.id || ('PLN-' + idx),
-                machineName: mName,
-                checkSheetId: sId,
-                frequency: freq,
-                date: pDate,
-                assignee: p.Assignee || p.assignee || assignee,
-                status: status
-              };
-            });
-            localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
-          }
-
-          // 4. Normalize Defects
-          if (d.defects && Array.isArray(d.defects)) {
-            state.defects = d.defects.map((def, idx) => {
-              let rawImg = def.Image_URLs || def.imageUrl || '';
-              let firstImg = rawImg.split('|')[0].trim();
-              let ts = def.Timestamp || def.timestamp || '';
-              if (ts && ts.includes('T')) {
-                const dt = new Date(ts);
-                if (!isNaN(dt.getTime())) ts = dt.toLocaleString('th-TH');
-              }
-              return {
-                logId: def.Defect_ID || def.logId || ('DEF-' + idx),
-                timestamp: ts,
-                machineName: def.Machine_Name || def.machineName || '',
-                station: def.Station || def.station || '',
-                taskName: def.Task_Name || def.taskName || '',
-                remark: def.Remark || def.remark || '',
-                inspector: def.Inspector || def.inspector || '',
-                imageUrl: firstImg,
-                status: def.Status || def.status || 'รอดำเนินการแก้ไข'
-              };
-            });
-            localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
-          }
-
-          // Refresh UI components
-          initUI();
-          renderDashboard();
-          renderCheckSheetsGallery();
-          renderPlanner();
-          renderDefectGallery();
-          renderMasterMachinesTable();
-
-          // If inspecting a machine currently, reload checklist to catch updated check sheets!
-          if (state.currentInspectMachine) {
-            loadChecklistForSelectedMachine(state.currentInspectMachine.name);
-          }
-
-          if (!isSilent) {
-            Swal.fire({
-              icon: 'success',
-              title: 'ซิงค์ข้อมูลสำเร็จ! 🟢',
-              text: `โหลดข้อมูลจาก Google Sheets เรียบร้อยแล้ว (เช็คชีท ${state.checkSheets.length} ชุด, แผนงาน ${state.plans.length} รายการ)`,
-              timer: 2000,
-              showConfirmButton: false
-            });
-          }
+        // 1. Normalize Machines
+        if (d.machines && Array.isArray(d.machines) && d.machines.length > 0) {
+          state.machines = d.machines.map((m, idx) => ({
+            id: m.Machine_ID || m.id || ('MCH-' + String(idx + 1).padStart(3, '0')),
+            name: m.Machine_Name || m.name || '',
+            station: m.Station || m.station || '',
+            location: m.Location || m.location || '',
+            checklistKey: m.Checklist_Key || m.checklistKey || '',
+            status: m.Status || m.status || 'Active',
+            defaultCheckSheetId: m.Default_Check_Sheet_ID || m.defaultCheckSheetId || ''
+          }));
+          localStorage.setItem('PM_MACHINES', JSON.stringify(state.machines));
         }
+
+        // 2. Normalize Check Sheets
+        if (d.checkSheets && Array.isArray(d.checkSheets)) {
+          state.checkSheets = d.checkSheets.map(s => {
+            let effDate = s.Effective_Date || s.effectiveDate || '';
+            if (effDate && effDate.includes('T')) effDate = effDate.substring(0, 10);
+            return {
+              id: s.Sheet_ID || s.id,
+              name: s.Sheet_Name || s.name || '',
+              department: s.Department || s.department || '',
+              effectiveDate: effDate || getTodayDateString(),
+              items: (s.items || []).map(it => ({
+                taskName: it.taskName || it.Task_Name || '',
+                standard: it.standard || it.Standard_Criteria || '',
+                forcePhoto: it.forcePhoto || it.Force_Photo || 'ไม่บังคับ',
+                forceValue: it.forceValue || it.Force_Value || 'ไม่บังคับ'
+              }))
+            };
+          });
+          localStorage.setItem('PM_CHECKSHEETS', JSON.stringify(state.checkSheets));
+        }
+
+        // 3. Normalize PM Plans (Robust Multi-Key & Column-Order Normalizer)
+        if (d.plans && Array.isArray(d.plans)) {
+          state.plans = d.plans.map((p, idx) => {
+            const values = Object.values(p).map(v => String(v || '').trim());
+
+            let mName = '';
+            let sId = '';
+            let pDate = '';
+            let freq = 'รายวัน';
+            let status = 'pending';
+            let assignee = 'ทีม PM ประจำกะ';
+
+            const csMatch = values.find(v => v.startsWith('CS-') || state.checkSheets.some(cs => cs.id === v));
+            if (csMatch) {
+              sId = csMatch;
+            } else if (p.Check_Sheet_ID || p.checkSheetId) {
+              sId = p.Check_Sheet_ID || p.checkSheetId;
+            }
+
+            const mchMatch = values.find(v => state.machines.some(m => m.name.toLowerCase() === v.toLowerCase() || m.id.toLowerCase() === v.toLowerCase()));
+            if (mchMatch) {
+              mName = mchMatch;
+            } else {
+              mName = p.Machine_Name || p.Machine_ID || p.machineName || '';
+              if (mName.startsWith('CS-')) {
+                if (!sId) sId = mName;
+                mName = p.Machine_ID || '';
+              }
+            }
+
+            const dateMatch = values.find(v => /^\d{4}-\d{2}-\d{2}/.test(v));
+            if (dateMatch) {
+              if (dateMatch.includes('T')) {
+                const dt = new Date(dateMatch);
+                if (!isNaN(dt.getTime())) pDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                else pDate = dateMatch.substring(0, 10);
+              } else {
+                pDate = dateMatch.substring(0, 10);
+              }
+            } else {
+              pDate = p.Planned_Date || p.date || '';
+            }
+
+            const freqMatch = values.find(v => ['รายวัน', 'เริ่มสตาร์ทเครื่อง', 'ประจำสัปดาห์', 'ทุก 15 วัน', 'ประจำเดือน', 'ประจำ 3 เดือน', 'ประจำ 6 เดือน', 'ประจำปี'].includes(v));
+            if (freqMatch) freq = freqMatch;
+            else freq = p.Frequency || p.frequency || 'รายวัน';
+
+            const statusMatch = values.find(v => ['pending', 'completed', 'รอตรวจ', 'เสร็จสิ้น'].includes(v.toLowerCase()));
+            if (statusMatch) status = statusMatch.toLowerCase();
+            else status = p.Status || p.status || 'pending';
+
+            return {
+              id: p.Plan_ID || p.id || ('PLN-' + idx),
+              machineName: mName,
+              checkSheetId: sId,
+              frequency: freq,
+              date: pDate,
+              assignee: p.Assignee || p.assignee || assignee,
+              status: status
+            };
+          });
+          localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+        }
+
+        // 4. Normalize Defects
+        if (d.defects && Array.isArray(d.defects)) {
+          state.defects = d.defects.map((def, idx) => {
+            let rawImg = def.Image_URLs || def.imageUrl || '';
+            let firstImg = rawImg.split('|')[0].trim();
+            let ts = def.Timestamp || def.timestamp || '';
+            if (ts && ts.includes('T')) {
+              const dt = new Date(ts);
+              if (!isNaN(dt.getTime())) ts = dt.toLocaleString('th-TH');
+            }
+            return {
+              logId: def.Defect_ID || def.logId || ('DEF-' + idx),
+              timestamp: ts,
+              machineName: def.Machine_Name || def.machineName || '',
+              station: def.Station || def.station || '',
+              taskName: def.Task_Name || def.taskName || '',
+              remark: def.Remark || def.remark || '',
+              inspector: def.Inspector || def.inspector || '',
+              imageUrl: firstImg,
+              status: def.Status || def.status || 'รอดำเนินการแก้ไข'
+            };
+          });
+          localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
+        }
+
+        // 5. Normalize Inspection Logs (Supports UTC, ISO, Thai Date)
+        if (rawLogs && Array.isArray(rawLogs)) {
+          state.inspectionLogs = rawLogs.map(log => {
+            let rawTs = log.Timestamp || log.timestamp || '';
+            let dateOnly = '';
+            let formattedTs = rawTs;
+
+            if (rawTs) {
+              const dt = new Date(rawTs);
+              if (!isNaN(dt.getTime())) {
+                const y = dt.getFullYear();
+                const m = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                dateOnly = `${y}-${m}-${day}`;
+                formattedTs = dt.toLocaleString('th-TH');
+              } else {
+                const match = String(rawTs).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+                if (match) dateOnly = `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+              }
+            }
+
+            return {
+              logId: log.Log_ID || log.logId || '',
+              timestamp: formattedTs,
+              date: dateOnly,
+              inspector: log.Inspector_Name || log.inspector || '',
+              machineName: log.Machine_Name || log.machineName || '',
+              station: log.Station || log.station || '',
+              frequency: log.Frequency || log.frequency || 'รายวัน',
+              checkSheetName: log.Check_Sheet_Name || log.checkSheetName || '',
+              taskName: log.Task_Name || log.taskName || '',
+              measuredValue: log.Measured_Value || log.measuredValue || '',
+              result: log.Result || log.result || 'ผ่าน',
+              imageUrls: (log.Image_URLs || log.imageUrls || '').split('|').map(s => s.trim()).filter(Boolean),
+              remark: log.Remark || log.remark || ''
+            };
+          });
+          localStorage.setItem('PM_INSPECTION_LOGS', JSON.stringify(state.inspectionLogs));
+        }
+
+        // Refresh UI components
+        initUI();
+        renderDashboard();
+        renderCheckSheetsGallery();
+        renderPlanner();
+        renderDefectGallery();
+        renderMasterMachinesTable();
+
+        if (state.currentInspectMachine) {
+          loadChecklistForSelectedMachine(state.currentInspectMachine.name);
+        }
+
+        if (!isSilent) {
+          Swal.fire({
+            icon: 'success',
+            title: 'ซิงค์ข้อมูลสำเร็จ! 🟢',
+            text: `โหลดข้อมูลจาก Google Sheets เรียบร้อยแล้ว (เช็คชีท ${state.checkSheets.length} ชุด, ประวัติการตรวจ ${state.inspectionLogs.length} จุดตรวจ)`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      } catch (err) {
+        console.warn('Sync error:', err);
+        if (!isSilent) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'การเชื่อมต่อออนไลน์มีปัญหา',
+            text: 'ระบบจะใช้ข้อมูลที่บันทึกไว้ล่าสุดในเครื่องแทน'
+          });
+        }
+      } finally {
+        if (spinIcon) spinIcon.classList.remove('animate-spin-slow');
+      }
+    }
       } catch (err) {
         console.warn('Sync error:', err);
         if (!isSilent) {
@@ -943,6 +1071,7 @@
     // Helper: Convert Google Drive View Link to Direct Image Thumbnail
     function formatDriveImageUrl(url) {
       if (!url) return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
+      if (url.startsWith('data:image')) return url;
       if (url.includes('drive.google.com') && url.includes('/d/')) {
         const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
@@ -968,11 +1097,11 @@
 
       if (isSup) {
         roleBadge.innerText = 'หัวหน้างาน (Supervisor)';
-        roleBadge.className = 'text-xs bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full font-normal border border-emerald-400/30';
+        roleBadge.className = 'text-[11px] bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full font-medium border border-emerald-400/30 whitespace-nowrap';
         
         authContainer.innerHTML = `
-          <button onclick="supervisorLogout()" class="text-xs bg-indigo-800 hover:bg-rose-900/80 border border-indigo-700 hover:border-rose-500 text-white px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition shadow">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออกจากระบบหัวหน้างาน
+          <button onclick="supervisorLogout()" class="text-xs bg-indigo-900 hover:bg-rose-900/80 border border-indigo-700 hover:border-rose-500 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition shadow whitespace-nowrap">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">ออกจากระบบ</span>
           </button>
         `;
 
@@ -981,11 +1110,11 @@
         mobSupervisor.classList.remove('hidden');
       } else {
         roleBadge.innerText = 'พนักงานทั่วไป (Staff)';
-        roleBadge.className = 'text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-normal border border-amber-400/30';
+        roleBadge.className = 'text-[11px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-medium border border-amber-400/30 whitespace-nowrap';
 
         authContainer.innerHTML = `
-          <button onclick="promptSupervisorLogin()" class="text-xs bg-amber-400 hover:bg-amber-300 text-slate-900 px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition shadow">
-            <i data-lucide="lock" class="w-3.5 h-3.5"></i> หัวหน้างานเข้าสู่ระบบ
+          <button onclick="promptSupervisorLogin()" class="text-xs bg-amber-400 hover:bg-amber-300 text-slate-900 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition shadow whitespace-nowrap">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">หัวหน้างาน</span>เข้าสู่ระบบ
           </button>
         `;
 
@@ -1095,13 +1224,13 @@
       if (activeEl) activeEl.classList.remove('hidden');
 
       document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('bg-indigo-800/80', 'text-white', 'bg-amber-500', 'text-slate-900');
+        btn.classList.remove('bg-indigo-800', 'text-white', 'bg-amber-500', 'text-slate-900', 'font-bold');
         btn.classList.add('text-indigo-100');
       });
       const activeNav = document.getElementById('nav-' + tabId);
       if (activeNav) {
-        if (tabId === 'inspect') activeNav.classList.add('bg-amber-500', 'text-slate-900');
-        else activeNav.classList.add('bg-indigo-800/80', 'text-white');
+        if (tabId === 'inspect') activeNav.classList.add('bg-amber-500', 'text-slate-900', 'font-bold');
+        else activeNav.classList.add('bg-indigo-800', 'text-white', 'font-bold');
       }
 
       document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
@@ -1116,9 +1245,9 @@
       });
 
       if (tabId === 'dashboard') renderDashboard();
-      if (tabId === 'checksheets') renderCheckSheetsGallery();
-      if (tabId === 'planner') renderPlanner();
       if (tabId === 'defects') renderDefectGallery();
+      if (tabId === 'planner') renderPlanner();
+      if (tabId === 'checksheets') renderCheckSheetsGallery();
       if (tabId === 'master') renderMasterMachinesTable();
 
       lucide.createIcons();
@@ -1132,17 +1261,1372 @@
       }
     }
 
-    // ================= 1. CHECK SHEET BUILDER =================
+    // ================= 1. FIELD INSPECTION (SMART CHECK SHEET RESOLVER) =================
+    function loadChecklistForSelectedMachine(forcedMachineName = null) {
+      const machineSelect = document.getElementById('inspect-machine-select');
+      const machineName = forcedMachineName || machineSelect.value;
+      const frequency = document.getElementById('inspect-frequency-select').value;
+      const checkSheetSelect = document.getElementById('inspect-checksheet-select');
+
+      const container = document.getElementById('checklist-container');
+      const emptyState = document.getElementById('checklist-empty-state');
+
+      if (!machineName) {
+        container.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      // 1. Find Machine (tolerant matching)
+      const machine = state.machines.find(m => 
+        m.name.toLowerCase() === machineName.toLowerCase() ||
+        m.id.toLowerCase() === machineName.toLowerCase() ||
+        m.name.toLowerCase().replace(/\s+/g, '') === machineName.toLowerCase().replace(/\s+/g, '') ||
+        m.name.toLowerCase().replace(/-/g, ' ') === machineName.toLowerCase().replace(/-/g, ' ') ||
+        machineName.toLowerCase().includes(m.name.toLowerCase()) ||
+        m.name.toLowerCase().includes(machineName.toLowerCase())
+      );
+      if (!machine) return;
+
+      machineSelect.value = machine.name;
+      state.currentInspectMachine = machine;
+      state.currentInspectPhotos = {};
+      state.currentInspectValues = {};
+      state.currentInspectResults = {};
+      state.currentInspectRemarks = {};
+
+      // 2. Populate CheckSheet dropdown
+      if (checkSheetSelect) {
+        checkSheetSelect.innerHTML = '<option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>';
+        state.checkSheets.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.innerText = `${s.name} (${s.items.length} จุดตรวจ)`;
+          checkSheetSelect.appendChild(opt);
+        });
+      }
+
+      // 3. SMART RESOLUTION FOR CHECK SHEET:
+      let checkSheet = null;
+
+      // Priority 1: Machine's explicit bound check sheet
+      if (machine.defaultCheckSheetId) {
+        checkSheet = state.checkSheets.find(s => s.id === machine.defaultCheckSheetId);
+      }
+
+      // Priority 2: From PM Plans created for this machine
+      if (!checkSheet) {
+        const matchingPlans = state.plans.filter(p => 
+          p.machineName && (
+            p.machineName.toLowerCase() === machine.name.toLowerCase() ||
+            p.machineName.toLowerCase() === machine.id.toLowerCase()
+          ) && p.checkSheetId
+        );
+
+        const freqPlan = matchingPlans.find(p => p.frequency === frequency);
+        if (freqPlan && freqPlan.checkSheetId) {
+          checkSheet = state.checkSheets.find(s => s.id === freqPlan.checkSheetId);
+        } else if (matchingPlans.length > 0 && matchingPlans[0].checkSheetId) {
+          checkSheet = state.checkSheets.find(s => s.id === matchingPlans[0].checkSheetId);
+        }
+      }
+
+      // Priority 3: Smart Match by Station & Production Line in CheckSheet Name
+      if (!checkSheet && state.checkSheets.length > 0) {
+        const stationClean = machine.station.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locClean = machine.location.toLowerCase();
+        
+        // Exact Station + Line match
+        checkSheet = state.checkSheets.find(s => {
+          const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return (nameClean.includes(stationClean) || stationClean.includes(nameClean)) && s.name.toLowerCase().includes(locClean);
+        });
+
+        // Station name match
+        if (!checkSheet) {
+          checkSheet = state.checkSheets.find(s => {
+            const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return nameClean.includes(stationClean) || stationClean.includes(nameClean) || s.name.toLowerCase().includes(machine.station.toLowerCase());
+          });
+        }
+
+        // Line name match
+        if (!checkSheet) {
+          checkSheet = state.checkSheets.find(s => s.name.toLowerCase().includes(locClean));
+        }
+      }
+
+      // Priority 4: Fallback to first available check sheet
+      if (!checkSheet && state.checkSheets.length > 0) {
+        checkSheet = state.checkSheets[0];
+      }
+
+      if (checkSheet) {
+        if (checkSheetSelect) checkSheetSelect.value = checkSheet.id;
+        state.currentCheckSheet = checkSheet;
+        state.currentChecklistItems = checkSheet.items || [];
+      } else {
+        state.currentCheckSheet = null;
+        state.currentChecklistItems = [];
+      }
+
+      document.getElementById('current-inspect-machine-name').innerText = machine.name;
+      document.getElementById('current-inspect-station-badge').innerText = machine.station;
+      document.getElementById('current-inspect-meta').innerText = `📋 ${checkSheet ? checkSheet.name : 'ยังไม่มีเช็คชีท'} | สาย: ${machine.location} | รอบ: ${frequency} | ทั้งหมด ${state.currentChecklistItems.length} จุดตรวจ`;
+
+      renderChecklistItems(state.currentChecklistItems);
+
+      emptyState.classList.add('hidden');
+      container.classList.remove('hidden');
+    }
+
+    function onCheckSheetDropdownChange() {
+      const sheetId = document.getElementById('inspect-checksheet-select').value;
+      const checkSheet = state.checkSheets.find(s => s.id === sheetId);
+      if (checkSheet && state.currentInspectMachine) {
+        state.currentCheckSheet = checkSheet;
+        state.currentChecklistItems = checkSheet.items || [];
+        
+        document.getElementById('current-inspect-meta').innerText = `📋 ${checkSheet.name} | สาย: ${state.currentInspectMachine.location} | รอบ: ${document.getElementById('inspect-frequency-select').value} | ทั้งหมด ${state.currentChecklistItems.length} จุดตรวจ`;
+        
+        renderChecklistItems(state.currentChecklistItems);
+      }
+    }
+
+    function renderChecklistItems(items) {
+      const list = document.getElementById('checklist-items-list');
+      list.innerHTML = '';
+
+      if (items.length === 0) {
+        list.innerHTML = `
+          <div class="p-8 bg-white rounded-2xl border border-slate-100 text-center text-slate-500">
+            <p class="font-bold text-slate-700">ยังไม่มีรายการเช็คชีทสำหรับเครื่องนี้</p>
+            <p class="text-xs text-slate-400 mt-1">กรุณาเลือกแบบฟอร์มเช็คชีทจากดรอปดาวน์ด้านบน หรือไปสร้างเช็คชีทใหม่ในแท็บ "แบบฟอร์มเช็คชีท"</p>
+          </div>
+        `;
+        return;
+      }
+
+      items.forEach((item, idx) => {
+        const itemId = 'CHK-ROW-' + (idx + 1);
+        state.currentInspectResults[itemId] = 'ผ่าน';
+
+        const isForcePhoto = item.forcePhoto === 'บังคับ';
+        const isForceValue = item.forceValue === 'บังคับ';
+
+        const card = document.createElement('div');
+        card.className = 'bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3 transition';
+        card.id = `card-${itemId}`;
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+                <h4 class="font-bold text-slate-800 text-sm sm:text-base">${item.taskName}</h4>
+                ${isForcePhoto ? '<span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold border border-rose-200">📷 บังคับถ่ายรูป</span>' : ''}
+                ${isForceValue ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold border border-blue-200">📝 บังคับระบุค่า</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-500 flex items-center gap-1">
+                <span class="font-semibold text-slate-600">มาตรฐานการตรวจ:</span> 
+                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-mono font-medium">${item.standard || 'ทำงานปกติ'}</span>
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2 sm:pt-0">
+              <button onclick="setInspectionResult('${itemId}', 'ผ่าน')" id="btn-pass-${itemId}" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-500 text-white shadow">
+                <i data-lucide="check" class="w-4 h-4"></i> ผ่าน
+              </button>
+              <button onclick="setInspectionResult('${itemId}', 'ไม่ผ่าน')" id="btn-fail-${itemId}" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700">
+                <i data-lucide="x" class="w-4 h-4"></i> ไม่ผ่าน
+              </button>
+            </div>
+          </div>
+
+          ${isForceValue ? `
+            <div class="pt-2 border-t border-slate-100">
+              <label class="block text-xs font-bold text-blue-700 mb-1">📝 ค่าที่ตรวจวัดได้จริง (บังคับระบุค่า) *</label>
+              <input type="text" id="value-input-${itemId}" oninput="state.currentInspectValues['${itemId}'] = this.value" placeholder="เช่น 145°C, 7.2 Bar, อยู่ในขีดปกติ..." class="w-full sm:w-80 px-3 py-1.5 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 bg-blue-50/20 font-mono">
+            </div>
+          ` : ''}
+
+          <div id="remark-box-${itemId}" class="hidden pt-2 border-t border-slate-100 space-y-2">
+            <label class="block text-xs font-bold text-rose-600">⚠️ ระบุอาการ/ปัญหาที่ตรวจพบ (บังคับ)</label>
+            <textarea id="remark-input-${itemId}" oninput="state.currentInspectRemarks['${itemId}'] = this.value" rows="2" placeholder="เช่น น็อตยึดหลวม, สายพานมีรอยแตก, อุณหภูมิเกินเกณฑ์..." class="w-full px-3 py-2 rounded-xl border border-rose-200 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none bg-rose-50/30"></textarea>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <button onclick="openLiveCamera('${itemId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+                <i data-lucide="camera" class="w-4 h-4"></i> ถ่ายภาพสดจากกล้อง
+              </button>
+              
+              <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                <i data-lucide="aperture" class="w-4 h-4"></i> ถ่ายด่วน (กล้องมือถือ)
+                <input type="file" accept="image/*" capture="environment" onchange="handleStrictCameraUpload(event, '${itemId}')" class="hidden">
+              </label>
+            </div>
+
+            <div id="photo-strip-${itemId}" class="flex items-center gap-2 overflow-x-auto py-1"></div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function setInspectionResult(itemId, result) {
+      state.currentInspectResults[itemId] = result;
+      const btnPass = document.getElementById(`btn-pass-${itemId}`);
+      const btnFail = document.getElementById(`btn-fail-${itemId}`);
+      const remarkBox = document.getElementById(`remark-box-${itemId}`);
+
+      if (result === 'ผ่าน') {
+        btnPass.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-500 text-white shadow';
+        btnFail.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700';
+        remarkBox.classList.add('hidden');
+      } else {
+        btnFail.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-rose-600 text-white shadow';
+        btnPass.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700';
+        remarkBox.classList.remove('hidden');
+        if (!state.currentInspectPhotos[itemId] || state.currentInspectPhotos[itemId].length === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'ตรวจพบสิ่งผิดปกติ!',
+            text: 'กรุณาถ่ายรูปจุดที่ชำรุด/มีปัญหาเพื่อแนบในรายงาน',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      }
+    }
+
+    function markAllPass() {
+      state.currentChecklistItems.forEach((item, idx) => {
+        const itemId = 'CHK-ROW-' + (idx + 1);
+        setInspectionResult(itemId, 'ผ่าน');
+      });
+      Swal.fire({ icon: 'success', title: 'ตั้งค่าเป็น "ผ่าน" ทั้งหมดแล้ว', timer: 1200, showConfirmButton: false });
+    }
+
+    // ================= CLIENT-SIDE IMAGE COMPRESSION (BLAZING FAST) =================
+    function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedDataUrl);
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleStrictCameraUpload(event, itemId) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1000
+      });
+      toast.fire({ icon: 'info', title: 'กำลังปรับขนาดภาพให้อ่านเร็ว...' });
+
+      try {
+        const compressedBase64 = await compressImageFile(file, 800, 800, 0.65);
+        addPhotoToItem(itemId, compressedBase64);
+        toast.fire({ icon: 'success', title: 'แนบรูปภาพเรียบร้อย (ขนาดเล็ก โหลดไว)' });
+      } catch (err) {
+        console.warn('Compress error:', err);
+        const reader = new FileReader();
+        reader.onload = (e) => addPhotoToItem(itemId, e.target.result);
+        reader.readAsDataURL(file);
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    function openLiveCamera(itemId) {
+      state.activeCameraItemId = itemId;
+      const modal = document.getElementById('camera-modal');
+      modal.classList.remove('hidden');
+      startCameraStream();
+    }
+
+    function startCameraStream() {
+      const video = document.getElementById('live-camera-feed');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: state.cameraFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        }).then(stream => {
+          state.cameraStream = stream;
+          video.srcObject = stream;
+        }).catch(err => {
+          console.warn('Camera stream error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'ไม่สามารถเปิดกล้องได้',
+            text: 'กรุณาอนุญาตการเข้าถึงกล้องบนเบราว์เซอร์ หรือใช้ปุ่ม "ถ่ายด่วน (กล้องมือถือ)"'
+          });
+          closeCameraModal();
+        });
+      }
+    }
+
+    function flipCameraFacing() {
+      state.cameraFacingMode = state.cameraFacingMode === 'environment' ? 'user' : 'environment';
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(track => track.stop());
+      }
+      startCameraStream();
+    }
+
+    function takeLiveSnapshot() {
+      const video = document.getElementById('live-camera-feed');
+      const canvas = document.getElementById('live-camera-canvas');
+      
+      let w = video.videoWidth || 640;
+      let h = video.videoHeight || 480;
+      const maxDim = 800;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(video, 0, 0, w, h);
+
+      const base64Img = canvas.toDataURL('image/jpeg', 0.65);
+      addPhotoToItem(state.activeCameraItemId, base64Img);
+
+      closeCameraModal();
+      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย (ขนาดเล็ก โหลดไว)', timer: 1000, showConfirmButton: false });
+    }
+
+    function closeCameraModal() {
+      const modal = document.getElementById('camera-modal');
+      modal.classList.add('hidden');
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream = null;
+      }
+    }
+
+    function addPhotoToItem(itemId, base64) {
+      if (!state.currentInspectPhotos[itemId]) {
+        state.currentInspectPhotos[itemId] = [];
+      }
+      if (state.currentInspectPhotos[itemId].length >= 5) {
+        Swal.fire({ icon: 'info', title: 'แนบได้สูงสุด 5 ภาพต่อรายการ' });
+        return;
+      }
+      state.currentInspectPhotos[itemId].push(base64);
+      renderPhotoStrip(itemId);
+    }
+
+    function removePhotoFromItem(itemId, index) {
+      if (state.currentInspectPhotos[itemId]) {
+        state.currentInspectPhotos[itemId].splice(index, 1);
+        renderPhotoStrip(itemId);
+      }
+    }
+
+    function renderPhotoStrip(itemId) {
+      const strip = document.getElementById(`photo-strip-${itemId}`);
+      if (!strip) return;
+      strip.innerHTML = '';
+
+      const photos = state.currentInspectPhotos[itemId] || [];
+      photos.forEach((img, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'relative flex-shrink-0 group';
+        thumb.innerHTML = `
+          <img src="${img}" onclick="openLightbox('${img}', 'รูปที่ ${idx + 1}')" class="w-12 h-12 rounded-lg object-cover border border-slate-200 cursor-pointer">
+          <button onclick="removePhotoFromItem('${itemId}', ${idx})" class="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow hover:bg-rose-600">
+            &times;
+          </button>
+        `;
+        strip.appendChild(thumb);
+      });
+    }
+
+    // ================= SUBMISSION WITH STRICT VALIDATION =================
+    async function submitInspection() {
+      const inspectorName = document.getElementById('inspector-name-input').value.trim();
+      if (!inspectorName) {
+        Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อผู้ตรวจเช็ค' });
+        return;
+      }
+
+      const machine = state.currentInspectMachine;
+      const frequency = document.getElementById('inspect-frequency-select').value;
+      const items = state.currentChecklistItems;
+
+      if (!machine || items.length === 0) return;
+
+      // 1. Strict Validation
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const itemId = 'CHK-ROW-' + (i + 1);
+        const result = state.currentInspectResults[itemId] || 'ผ่าน';
+        const photos = state.currentInspectPhotos[itemId] || [];
+        const val = state.currentInspectValues[itemId] || '';
+
+        if (item.forcePhoto === 'บังคับ' && photos.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'ยังไม่ได้ถ่ายรูปประกอบ!',
+            text: `หัวข้อที่ #${i + 1}: "${item.taskName}" เป็นรายการที่ "บังคับถ่ายรูป"`
+          });
+          return;
+        }
+
+        if (item.forceValue === 'บังคับ' && (!val || val.trim() === '')) {
+          Swal.fire({
+            icon: 'error',
+            title: 'ยังไม่ได้ระบุค่าที่วัดได้!',
+            text: `หัวข้อที่ #${i + 1}: "${item.taskName}" เป็นรายการที่ "บังคับระบุค่า"`
+          });
+          return;
+        }
+
+        if (result === 'ไม่ผ่าน' && (!state.currentInspectRemarks[itemId] || state.currentInspectRemarks[itemId].trim() === '')) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาระบุหมายเหตุ/อาการที่พบ',
+            text: `ในหัวข้อ: "${item.taskName}" ที่ระบุผลว่า ไม่ผ่าน`
+          });
+          return;
+        }
+      }
+
+      Swal.fire({
+        title: 'กำลังบันทึกข้อมูลด่วน...',
+        html: '<div class="text-xs text-slate-500 mt-1">ส่งผลการตรวจและอัปโหลดภาพบีบอัดความเร็วสูงขึ้น Google Drive & Sheets</div>',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const todayStr = getTodayDateString();
+      const currentFormattedTs = new Date().toLocaleString('th-TH');
+
+      const submissionPayload = {
+        inspector: inspectorName,
+        machineName: machine.name,
+        station: machine.station,
+        frequency: frequency,
+        checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
+        items: items.map((item, idx) => {
+          const itemId = 'CHK-ROW-' + (idx + 1);
+          return {
+            id: itemId,
+            taskName: item.taskName,
+            standard: item.standard,
+            measuredValue: state.currentInspectValues[itemId] || '',
+            result: state.currentInspectResults[itemId] || 'ผ่าน',
+            remark: state.currentInspectRemarks[itemId] || '',
+            images: state.currentInspectPhotos[itemId] || []
+          };
+        })
+      };
+
+      // Add to Inspection Logs locally for instant feedback in Dashboard
+      submissionPayload.items.forEach((it, idx) => {
+        state.inspectionLogs.unshift({
+          logId: 'LOG-' + Date.now() + '-' + (idx + 1),
+          timestamp: currentFormattedTs,
+          date: todayStr,
+          inspector: inspectorName,
+          machineName: machine.name,
+          station: machine.station,
+          frequency: frequency,
+          checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
+          taskName: it.taskName,
+          measuredValue: it.measuredValue,
+          result: it.result,
+          imageUrls: it.images,
+          remark: it.remark
+        });
+      });
+      localStorage.setItem('PM_INSPECTION_LOGS', JSON.stringify(state.inspectionLogs));
+
+      // Record Defects
+      submissionPayload.items.forEach(it => {
+        if (it.result === 'ไม่ผ่าน') {
+          const newDefect = {
+            logId: 'DEF-' + Date.now(),
+            inspector: inspectorName,
+            machineName: machine.name,
+            station: machine.station,
+            frequency: frequency,
+            taskName: it.taskName,
+            result: 'ไม่ผ่าน',
+            imageUrl: it.images[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
+            remark: it.remark,
+            timestamp: currentFormattedTs,
+            status: 'รอดำเนินการแก้ไข'
+          };
+          state.defects.unshift(newDefect);
+        }
+      });
+      localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
+
+      // Update Plan Status
+      const planIdx = state.plans.findIndex(p => p.machineName === machine.name && p.date === todayStr);
+      if (planIdx >= 0) {
+        state.plans[planIdx].status = 'completed';
+      } else {
+        state.plans.push({
+          id: 'PLN-' + Date.now(),
+          machineName: machine.name,
+          frequency: frequency,
+          date: todayStr,
+          assignee: inspectorName,
+          status: 'completed'
+        });
+      }
+      localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+
+      // Send to Google Sheets Asynchronously
+      if (state.gasUrl) {
+        try {
+          await fetch(state.gasUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'submitInspection', payload: submissionPayload })
+          });
+        } catch (err) {
+          console.warn('Google Sheet GAS Sync warning:', err);
+        }
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'บันทึกสำเร็จรวดเร็ว! ⚡',
+        text: `ตรวจเช็ค ${machine.name} เรียบร้อยแล้ว`,
+        confirmButtonColor: '#4F46E5',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        state.currentInspectPhotos = {};
+        state.currentInspectValues = {};
+        state.currentInspectRemarks = {};
+        loadChecklistForSelectedMachine(machine.name);
+        if (state.userRole === 'supervisor') switchTab('dashboard');
+      });
+    }
+
+    // ================= 2. DASHBOARD (WITH DATE PICKER & CLICK-TO-VIEW DETAILS) =================
+    let lineChartInstance = null;
+
+    function setDashboardToday() {
+      state.dashboardSelectedDate = getTodayDateString();
+      document.getElementById('dashboard-date-picker').value = state.dashboardSelectedDate;
+      renderDashboard();
+    }
+
+    function changeDashboardDate(newDate) {
+      if (!newDate) return;
+      state.dashboardSelectedDate = newDate;
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const selectedDate = state.dashboardSelectedDate || getTodayDateString();
+      const lineFilter = document.getElementById('dashboard-line-filter').value;
+      const filteredMachines = lineFilter === 'ALL' 
+        ? state.machines 
+        : state.machines.filter(m => m.location === lineFilter);
+
+      const totalCount = filteredMachines.length;
+      let doneCount = 0;
+      let defectCount = 0;
+
+      // Format selected date in Thai
+      const parts = selectedDate.split('-');
+      const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateLabel = dObj.toLocaleDateString('th-TH', dateOptions);
+      const isToday = selectedDate === getTodayDateString();
+      
+      document.getElementById('current-date-label').innerHTML = `
+        <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
+        <span>ข้อมูลประจำ ${dateLabel}</span>
+        ${isToday ? '<span class="text-[10px] bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full ml-1">วันนี้</span>' : ''}
+      `;
+
+      const machineStatuses = {};
+      filteredMachines.forEach(m => {
+        const plan = state.plans.find(p => p.machineName === m.name && p.date === selectedDate);
+        const hasDefect = state.defects.some(d => d.machineName === m.name && d.status !== 'แก้ไขเรียบร้อย');
+        const hasLog = state.inspectionLogs.some(l => l.machineName.toLowerCase() === m.name.toLowerCase() && (l.date === selectedDate || (l.timestamp && l.timestamp.includes(selectedDate))));
+
+        if (hasDefect) {
+          machineStatuses[m.name] = 'defect';
+          defectCount++;
+          doneCount++;
+        } else if ((plan && plan.status === 'completed') || hasLog) {
+          machineStatuses[m.name] = 'done';
+          doneCount++;
+        } else {
+          machineStatuses[m.name] = 'pending';
+        }
+      });
+
+      const pendingCount = Math.max(0, totalCount - doneCount);
+      const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+      document.getElementById('stat-percent').innerText = `${percent}%`;
+      document.getElementById('stat-completed-ratio').innerText = `${doneCount} / ${totalCount} เครื่อง`;
+      document.getElementById('stat-done').innerText = doneCount;
+      document.getElementById('stat-pending').innerText = pendingCount;
+      document.getElementById('stat-defects').innerText = defectCount;
+
+      const isowaDone = state.machines.filter(m => m.location === 'ISOWA' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
+      const bhsDone = state.machines.filter(m => m.location === 'BHS' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
+      const yueliDone = state.machines.filter(m => m.location === 'YUELI' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
+
+      document.getElementById('prog-isowa').innerText = `${isowaDone}/10`;
+      document.getElementById('prog-bhs').innerText = `${bhsDone}/10`;
+      document.getElementById('prog-yueli').innerText = `${yueliDone}/10`;
+
+      const gridContainer = document.getElementById('machine-status-grid');
+      gridContainer.innerHTML = '';
+
+      filteredMachines.forEach(m => {
+        const st = machineStatuses[m.name] || 'pending';
+        let bgClass = 'bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-300';
+        let dotClass = 'bg-slate-300';
+        let statusText = 'ยังไม่ตรวจ';
+
+        if (st === 'done') {
+          bgClass = 'bg-emerald-50/80 border-emerald-300 text-emerald-900';
+          dotClass = 'bg-emerald-500';
+          statusText = 'ตรวจแล้ว';
+        } else if (st === 'defect') {
+          bgClass = 'bg-rose-50 border-rose-300 text-rose-900';
+          dotClass = 'bg-rose-500 animate-ping';
+          statusText = 'พบปัญหา';
+        }
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${bgClass} hover:shadow-md`;
+        card.onclick = () => showMachineInspectionDetailModal(m.name);
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold">${m.name}</span>
+              <span class="w-2 h-2 rounded-full ${dotClass}"></span>
+            </div>
+            <p class="text-[10px] text-slate-500 truncate mt-0.5">${m.station}</p>
+          </div>
+          <div class="mt-2 pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
+            <span class="font-medium">${statusText}</span>
+            <span class="text-indigo-600 font-bold hover:underline">ดูรายละเอียด &rarr;</span>
+          </div>
+        `;
+        gridContainer.appendChild(card);
+      });
+
+      renderLineChart(isowaDone, bhsDone, yueliDone);
+      renderDashboardRecentDefects();
+      lucide.createIcons();
+    }
+
+    // Modal: View detailed inspection items, results, and photos for clicked station (VIEW-ONLY REPORT)
+    function showMachineInspectionDetailModal(machineName) {
+      const machine = state.machines.find(m => m.name.toLowerCase() === machineName.toLowerCase());
+      if (!machine) return;
+
+      const selectedDate = state.dashboardSelectedDate || getTodayDateString();
+
+      // Find logs on selected date
+      let machineLogs = state.inspectionLogs.filter(log => 
+        log.machineName.toLowerCase() === machine.name.toLowerCase() && 
+        (log.date === selectedDate || (log.timestamp && log.timestamp.includes(selectedDate)))
+      );
+
+      let isDateSpecific = true;
+      if (machineLogs.length === 0) {
+        // Fallback to latest logs for this machine
+        const allMachineLogs = state.inspectionLogs.filter(log => log.machineName.toLowerCase() === machine.name.toLowerCase());
+        if (allMachineLogs.length > 0) {
+          const latestTs = allMachineLogs[0].timestamp || allMachineLogs[0].date;
+          machineLogs = allMachineLogs.filter(log => (log.timestamp === latestTs || log.date === latestTs));
+          isDateSpecific = false;
+        }
+      }
+
+      const activeDefects = state.defects.filter(d => d.machineName.toLowerCase() === machine.name.toLowerCase() && d.status !== 'แก้ไขเรียบร้อย');
+      let bodyHtml = '';
+
+      if (machineLogs.length > 0) {
+        const firstLog = machineLogs[0];
+        const hasDefect = machineLogs.some(l => l.result === 'ไม่ผ่าน') || activeDefects.length > 0;
+        const passCount = machineLogs.filter(l => l.result === 'ผ่าน').length;
+        const totalPoints = machineLogs.length;
+
+        let itemsHtml = machineLogs.map((item, idx) => {
+          const isPass = item.result === 'ผ่าน';
+          const imagesHtml = (item.imageUrls && item.imageUrls.length > 0) ? `
+            <div class="flex items-center gap-2 mt-2 overflow-x-auto py-1">
+              ${item.imageUrls.map((img, imgIdx) => {
+                const displayImg = formatDriveImageUrl(img);
+                return `
+                  <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${item.taskName} (${imgIdx + 1})')" class="w-14 h-14 rounded-lg object-cover border border-slate-200 cursor-pointer hover:opacity-80 transition flex-shrink-0 shadow-sm">
+                `;
+              }).join('')}
+            </div>
+          ` : '';
+
+          return `
+            <div class="p-3.5 rounded-xl border ${isPass ? 'bg-slate-50/70 border-slate-100' : 'bg-rose-50/50 border-rose-200'} space-y-1.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+                    <span class="text-xs font-bold text-slate-800">${item.taskName}</span>
+                    ${item.measuredValue ? `<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono font-bold">ค่า: ${item.measuredValue}</span>` : ''}
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5">เกณฑ์มาตรฐาน: ${item.standard || '-'}</p>
+                </div>
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm ${isPass ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                  ${isPass ? '✓ ผ่าน' : '✕ ไม่ผ่าน'}
+                </span>
+              </div>
+
+              ${item.remark ? `
+                <div class="text-xs text-rose-600 bg-rose-100/50 px-2.5 py-1.5 rounded-lg border border-rose-200/60 font-medium">
+                  ⚠️ <b>ข้อบกพร่อง:</b> ${item.remark}
+                </div>
+              ` : ''}
+
+              ${imagesHtml}
+            </div>
+          `;
+        }).join('');
+
+        bodyHtml = `
+          <div class="text-left space-y-4 text-sm max-h-[75vh] overflow-y-auto pr-1">
+            
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl space-y-2 shadow">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-lg font-bold">${machine.name}</h3>
+                  <span class="bg-indigo-500/40 text-indigo-200 text-xs px-2 py-0.5 rounded-full border border-indigo-400/30">${machine.station} (${machine.location})</span>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold shadow ${hasDefect ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
+                  ${hasDefect ? '⚠️ พบข้อบกพร่อง' : '✅ ผ่านการตรวจทั้งหมด'}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-indigo-200 pt-1 border-t border-white/10">
+                <div><span class="text-slate-400 block text-[10px]">ผู้ตรวจเช็ค:</span> <b class="text-white">${firstLog.inspector || 'ไม่ระบุ'}</b></div>
+                <div><span class="text-slate-400 block text-[10px]">วันที่ตรวจ:</span> <b class="text-white">${firstLog.timestamp || selectedDate}</b></div>
+                <div><span class="text-slate-400 block text-[10px]">ความถี่ / เช็คชีท:</span> <b class="text-white">${firstLog.frequency} (${firstLog.checkSheetName || 'แบบฟอร์มประจำเครื่อง'})</b></div>
+              </div>
+            </div>
+
+            ${!isDateSpecific ? `
+              <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+                <span>(ในวันที่ ${selectedDate} ยังไม่มีการตรวจ แสดงผลจากการตรวจเช็คล่าสุดเมื่อ ${firstLog.timestamp || firstLog.date})</span>
+              </div>
+            ` : ''}
+
+            <div class="flex items-center justify-between text-xs px-3 py-2 bg-slate-100 rounded-xl font-semibold text-slate-700">
+              <span>รายการจุดตรวจทั้งหมด (${totalPoints} จุด)</span>
+              <span class="text-emerald-700 font-bold">ผ่าน ${passCount} / ${totalPoints} จุด</span>
+            </div>
+
+            <div class="space-y-2.5">
+              ${itemsHtml}
+            </div>
+
+          </div>
+        `;
+      } else {
+        bodyHtml = `
+          <div class="p-8 text-center space-y-3">
+            <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
+              <i data-lucide="clock" class="w-8 h-8"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-800">ยังไม่มีข้อมูลการตรวจเช็ค ${machine.name}</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">ในวันที่ ${selectedDate} เครื่องจักรนี้ยังไม่ได้รับการบันทึกผลการตรวจเช็ค PM ประจำวัน</p>
+          </div>
+        `;
+      }
+
+      Swal.fire({
+        title: `📋 รายงานผลการตรวจเช็ค: ${machine.name}`,
+        html: bodyHtml,
+        width: '750px',
+        showCancelButton: false,
+        confirmButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#4F46E5',
+        didOpen: () => lucide.createIcons()
+      });
+    }
+
+    function renderLineChart(isowa, bhs, yueli) {
+      const ctx = document.getElementById('lineProgressChart');
+      if (!ctx) return;
+
+      if (lineChartInstance) {
+        lineChartInstance.destroy();
+      }
+
+      lineChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['ISOWA (ตรวจแล้ว)', 'BHS (ตรวจแล้ว)', 'YUELI (ตรวจแล้ว)', 'ยังไม่ตรวจ'],
+          datasets: [{
+            data: [isowa, bhs, yueli, Math.max(0, 30 - (isowa + bhs + yueli))],
+            backgroundColor: ['#6366F1', '#3B82F6', '#0EA5E9', '#E2E8F0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Prompt', size: 11 } } }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function renderDashboardRecentDefects() {
+      const container = document.getElementById('dashboard-recent-defects');
+      container.innerHTML = '';
+
+      const recent = state.defects.slice(0, 3);
+      if (recent.length === 0) {
+        container.innerHTML = `<div class="col-span-3 text-center py-6 text-slate-400 text-xs">ไม่พบรายการข้อบกพร่องที่คั่งค้าง ทุกระบบทำงานปกติ 🟢</div>`;
+        return;
+      }
+
+      recent.forEach(d => {
+        const displayImg = formatDriveImageUrl(d.imageUrl);
+        const card = document.createElement('div');
+        card.className = 'flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-xl';
+        card.innerHTML = `
+          <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0 border border-rose-200">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-800 truncate">${d.machineName}</span>
+              <span class="text-[10px] bg-rose-200/60 text-rose-700 px-1.5 py-0.2 rounded font-semibold">${d.status || 'รอซ่อม'}</span>
+            </div>
+            <p class="text-[11px] text-slate-600 font-medium truncate mt-0.5">${d.taskName}</p>
+            <p class="text-[11px] text-rose-600 font-semibold truncate mt-0.5">⚠️ ${d.remark}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ================= 3. DEFECTS & ISSUES GALLERY =================
+    function renderDefectGallery() {
+      const container = document.getElementById('defects-cards-grid');
+      container.innerHTML = '';
+
+      const filter = document.getElementById('defect-status-filter').value;
+      const list = filter === 'ALL' ? state.defects : state.defects.filter(d => d.status === filter);
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-3 bg-white p-12 rounded-2xl border border-slate-100 text-center text-slate-400">
+            <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-2"></i>
+            <p class="font-bold text-slate-700">ไม่พบรายการปัญหาในหมวดหมู่นี้</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      list.forEach((d, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between';
+        
+        let statusBadge = 'bg-rose-100 text-rose-700';
+        if (d.status === 'กำลังดำเนินการซ่อม') statusBadge = 'bg-amber-100 text-amber-800';
+        if (d.status === 'แก้ไขเรียบร้อย') statusBadge = 'bg-emerald-100 text-emerald-700';
+
+        const displayImg = formatDriveImageUrl(d.imageUrl);
+
+        card.innerHTML = `
+          <div>
+            <div class="relative h-48 bg-slate-900 overflow-hidden cursor-pointer" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')">
+              <img src="${displayImg}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+              <span class="absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-bold shadow ${statusBadge}">
+                ${d.status || 'รอดำเนินการแก้ไข'}
+              </span>
+              <span class="absolute bottom-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-2.5 py-1 rounded-lg font-mono">
+                ${d.machineName}
+              </span>
+            </div>
+
+            <div class="p-5 space-y-2">
+              <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>ผู้ตรวจ: ${d.inspector || 'ไม่ระบุ'}</span>
+                <span>${d.timestamp || 'ล่าสุด'}</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-sm">${d.taskName}</h4>
+              <p class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-100 font-medium">
+                <b>ปัญหาที่พบ:</b> ${d.remark}
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-500 font-medium">เปลี่ยนสถานะ:</span>
+            <select onchange="updateDefectStatus('${d.logId || idx}', this.value)" class="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none">
+              <option value="รอดำเนินการแก้ไข" ${d.status === 'รอดำเนินการแก้ไข' ? 'selected' : ''}>รอดำเนินการแก้ไข</option>
+              <option value="กำลังดำเนินการซ่อม" ${d.status === 'กำลังดำเนินการซ่อม' ? 'selected' : ''}>กำลังดำเนินการซ่อม</option>
+              <option value="แก้ไขเรียบร้อย" ${d.status === 'แก้ไขเรียบร้อย' ? 'selected' : ''}>แก้ไขเรียบร้อย</option>
+            </select>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateDefectBadge();
+    }
+
+    function updateDefectStatus(logId, newStatus) {
+      const defect = state.defects.find((d, idx) => (d.logId === logId || String(idx) === logId));
+      if (defect) {
+        defect.status = newStatus;
+        localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
+        updateDefectBadge();
+
+        if (state.gasUrl) {
+          fetch(state.gasUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateDefectStatus', defectId: defect.logId, status: newStatus })
+          }).catch(e => console.warn('GAS Sync defect:', e));
+        }
+
+        Swal.fire({ icon: 'success', title: 'อัปเดตสถานะเรียบร้อย', timer: 1000, showConfirmButton: false });
+      }
+    }
+
+    function quickInspect(machineName) {
+      switchTab('inspect');
+      loadChecklistForSelectedMachine(machineName);
+    }
+
+    // ================= 4. PM PLANNER & SCHEDULE MATRIX (WITH LINE FILTER) =================
+    function renderPlanner() {
+      const monthNames = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+      ];
+      document.getElementById('calendar-month-year-title').innerText = `${monthNames[state.currentMonth]} ${state.currentYear + 543}`;
+
+      const lineFilterEl = document.getElementById('planner-line-filter');
+      const lineFilter = lineFilterEl ? lineFilterEl.value : 'ALL';
+
+      const filteredMachines = (lineFilter === 'ALL') 
+        ? state.machines 
+        : state.machines.filter(m => m.location === lineFilter);
+      
+      const machineNamesSet = new Set(filteredMachines.map(m => m.name.toLowerCase()));
+
+      const grid = document.getElementById('calendar-grid-cells');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(state.currentYear, state.currentMonth, 1).getDay();
+      const totalDays = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'h-24 sm:h-28 rounded-xl bg-slate-50/50 border border-transparent';
+        grid.appendChild(empty);
+      }
+
+      const today = new Date();
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = today.getFullYear() === state.currentYear && today.getMonth() === state.currentMonth && today.getDate() === day;
+
+        const dayPlans = state.plans.filter(p => 
+          p.date === dateStr && 
+          (lineFilter === 'ALL' || (p.machineName && machineNamesSet.has(p.machineName.toLowerCase())))
+        );
+        const completedCount = dayPlans.filter(p => p.status === 'completed').length;
+        const totalDayPlans = dayPlans.length;
+
+        const cell = document.createElement('div');
+        cell.className = `h-24 sm:h-28 p-2 rounded-xl border flex flex-col justify-between transition cursor-pointer hover:shadow-md ${
+          isToday ? 'bg-indigo-50/40 border-indigo-300 ring-2 ring-indigo-500/20' : 'bg-white border-slate-100 hover:border-indigo-200'
+        }`;
+        cell.onclick = () => showDayScheduleModal(dateStr, dayPlans);
+
+        let badgeHtml = '';
+        if (totalDayPlans > 0) {
+          const isAllDone = completedCount === totalDayPlans;
+          badgeHtml = `
+            <div class="mt-1">
+              <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                isAllDone ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
+              }">
+                PM: ${completedCount}/${totalDayPlans}
+              </span>
+            </div>
+          `;
+        }
+
+        cell.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold ${isToday ? 'text-indigo-600 bg-indigo-100 px-1.5 rounded-full' : 'text-slate-700'}">${day}</span>
+            ${isToday ? '<span class="text-[9px] font-bold text-indigo-600">วันนี้</span>' : ''}
+          </div>
+          ${badgeHtml}
+          <div class="text-[9px] text-slate-400 text-right mt-auto">คลิกดู &rarr;</div>
+        `;
+        grid.appendChild(cell);
+      }
+
+      renderPlannerMatrix(filteredMachines);
+    }
+
+    function renderPlannerMatrix(filteredMachines = null) {
+      const tbody = document.getElementById('planner-matrix-tbody');
+      tbody.innerHTML = '';
+
+      const lineFilterEl = document.getElementById('planner-line-filter');
+      const lineFilter = lineFilterEl ? lineFilterEl.value : 'ALL';
+      const machines = filteredMachines || ((lineFilter === 'ALL') ? state.machines : state.machines.filter(m => m.location === lineFilter));
+
+      machines.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-semibold text-slate-800">${m.name}</td>
+          <td class="px-4 py-3 text-slate-600"><span class="text-xs bg-slate-100 px-2 py-0.5 rounded font-medium">${m.location}</span></td>
+          <td class="px-4 py-3 text-slate-600">${m.station}</td>
+          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-emerald-400"></span></td>
+          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-emerald-400"></span></td>
+          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-indigo-400"></span></td>
+          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-indigo-400"></span></td>
+          <td class="px-4 py-3 text-right">
+            <button onclick="quickInspect('${m.name}')" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-lg font-semibold transition">
+              ตรวจเช็ค
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function changeMonth(delta) {
+      state.currentMonth += delta;
+      if (state.currentMonth < 0) {
+        state.currentMonth = 11;
+        state.currentYear -= 1;
+      } else if (state.currentMonth > 11) {
+        state.currentMonth = 0;
+        state.currentYear += 1;
+      }
+      renderPlanner();
+    }
+
+    function setPlannerView(view) {
+      const calView = document.getElementById('planner-calendar-view');
+      const matrixView = document.getElementById('planner-matrix-view');
+      const btnCal = document.getElementById('btn-view-cal');
+      const btnMatrix = document.getElementById('btn-view-matrix');
+
+      if (view === 'calendar') {
+        calView.classList.remove('hidden');
+        matrixView.classList.add('hidden');
+        btnCal.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white shadow-sm text-indigo-900 transition';
+        btnMatrix.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-900 transition';
+      } else {
+        calView.classList.add('hidden');
+        matrixView.classList.remove('hidden');
+        btnMatrix.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white shadow-sm text-indigo-900 transition';
+        btnCal.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-900 transition';
+      }
+    }
+
+    function showDayScheduleModal(dateStr, dayPlans) {
+      let listHtml = '';
+      if (dayPlans.length === 0) {
+        listHtml = '<p class="text-sm text-slate-400 py-4 text-center">ไม่มีแผนงาน PM พิเศษในวันนี้</p>';
+      } else {
+        listHtml = dayPlans.map(p => {
+          const sheet = state.checkSheets.find(s => s.id === p.checkSheetId);
+          return `
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-2 border border-slate-100">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-800 text-sm">${p.machineName}</h4>
+                  <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">${p.frequency}</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">📋 ${sheet ? sheet.name : 'แบบฟอร์มเช็คชีท'} | ผู้ตรวจ: ${p.assignee || 'ทีม PM'}</p>
+              </div>
+              <button onclick="quickInspect('${p.machineName}'); Swal.close();" class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                เปิดตรวจเช็ค &rarr;
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      Swal.fire({
+        title: `📅 แผนงาน PM ประจำวันที่ ${dateStr}`,
+        html: `<div class="text-left mt-3 max-h-80 overflow-y-auto">${listHtml}</div>`,
+        confirmButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#4F46E5'
+      });
+    }
+
+    function openCreatePlanFromCheckSheetModal(preselectedSheetId = null) {
+      if (state.checkSheets.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'ยังไม่มีแบบฟอร์มเช็คชีท',
+          text: 'กรุณาสร้างแบบฟอร์มเช็คชีทก่อนในแท็บ "แบบฟอร์มเช็คชีท"',
+          confirmButtonText: 'ไปสร้างเช็คชีท',
+          confirmButtonColor: '#4F46E5'
+        }).then(() => switchTab('checksheets'));
+        return;
+      }
+
+      const sheetOptions = state.checkSheets.map(s => `
+        <option value="${s.id}" ${preselectedSheetId === s.id ? 'selected' : ''}>${s.name} (${s.items.length} จุดตรวจ - ${s.department})</option>
+      `).join('');
+
+      const machineOptions = state.machines.map(m => `
+        <option value="${m.name}">${m.name} (${m.station}) - ${m.location}</option>
+      `).join('');
+
+      Swal.fire({
+        title: '📅 ผูกเช็คชีทสร้างแผน PM ลงปฏิทิน',
+        width: '680px',
+        html: `
+          <div class="text-left space-y-4 text-sm max-h-[75vh] overflow-y-auto pr-1">
+            
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">1. เลือกแบบฟอร์มเช็คชีทที่ต้องการใช้ *</label>
+              <select id="plan-sheet-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                ${sheetOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">2. เลือกเครื่องจักรที่ต้องการผูกแผน *</label>
+              <select id="plan-machine-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                ${machineOptions}
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">3. ความถี่ของแผน (Frequency) *</label>
+                <select id="plan-freq-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                  <option value="รายวัน" selected>ประจำวัน (Daily)</option>
+                  <option value="เริ่มสตาร์ทเครื่อง">เริ่มสตาร์ทเครื่อง (Pre-startup)</option>
+                  <option value="ประจำสัปดาห์">ประจำสัปดาห์ (Weekly)</option>
+                  <option value="ทุก 15 วัน">ทุก 15 วัน (Bi-weekly)</option>
+                  <option value="ประจำเดือน">ประจำเดือน (Monthly)</option>
+                  <option value="ประจำ 3 เดือน">ประจำ 3 เดือน (Quarterly)</option>
+                  <option value="ประจำ 6 เดือน">ประจำ 6 เดือน (Semi-Annual)</option>
+                  <option value="ประจำปี">ประจำปี (Annual)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">4. วันที่เริ่มตามแผน *</label>
+                <input type="date" id="plan-start-date" value="${getTodayDateString()}" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">5. การสร้างตารางอัตโนมัติ (Recurrence)</label>
+                <select id="plan-recurrence-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                  <option value="month" selected>สร้างซ้ำตลอดทั้งเดือนนี้ (Auto Fill Month)</option>
+                  <option value="single">เฉพาะวันที่เลือกเท่านั้น</option>
+                  <option value="weekly">ทุกสัปดาห์ในวันเดียวกัน</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">6. ผู้รับผิดชอบ / ช่างซ่อมบำรุง</label>
+                <input type="text" id="plan-assignee-input" placeholder="เช่น ทีม PM ประจำกะ / ช่างปัญญา" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'บันทึกแผน & ซิงค์ลงปฏิทิน',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#4F46E5',
+        preConfirm: () => {
+          const sheetId = document.getElementById('plan-sheet-select').value;
+          const machine = document.getElementById('plan-machine-select').value;
+          const freq = document.getElementById('plan-freq-select').value;
+          const startDate = document.getElementById('plan-start-date').value;
+          const recurrence = document.getElementById('plan-recurrence-select').value;
+          const assignee = document.getElementById('plan-assignee-input').value || 'ทีม PM ประจำกะ';
+
+          if (!sheetId || !machine || !startDate) {
+            Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return false;
+          }
+
+          return { sheetId, machine, freq, startDate, recurrence, assignee };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          executeSavePlanFromCheckSheet(res.value);
+        }
+      });
+    }
+
+    function executeSavePlanFromCheckSheet(data) {
+      const parts = data.startDate.split('-');
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const startDay = parseInt(parts[2]);
+
+      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+      let newPlansBatch = [];
+
+      if (data.recurrence === 'month') {
+        for (let d = 1; d <= totalDaysInMonth; d++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          newPlansBatch.push({
+            id: 'PLN-' + Date.now() + '-' + d,
+            machineName: data.machine,
+            checkSheetId: data.sheetId,
+            frequency: data.freq,
+            date: dateStr,
+            assignee: data.assignee,
+            status: 'pending'
+          });
+        }
+      } else if (data.recurrence === 'weekly') {
+        for (let d = startDay; d <= totalDaysInMonth; d += 7) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          newPlansBatch.push({
+            id: 'PLN-' + Date.now() + '-' + d,
+            machineName: data.machine,
+            checkSheetId: data.sheetId,
+            frequency: data.freq,
+            date: dateStr,
+            assignee: data.assignee,
+            status: 'pending'
+          });
+        }
+      } else {
+        newPlansBatch.push({
+          id: 'PLN-' + Date.now(),
+          machineName: data.machine,
+          checkSheetId: data.sheetId,
+          frequency: data.freq,
+          date: data.startDate,
+          assignee: data.assignee,
+          status: 'pending'
+        });
+      }
+
+      state.plans = state.plans.concat(newPlansBatch);
+      localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+      renderPlanner();
+
+      if (state.gasUrl && newPlansBatch.length > 0) {
+        fetch(state.gasUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'savePlans', payload: newPlansBatch })
+        }).catch(e => console.warn('GAS Sync plans:', e));
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'บันทึกแผนงานเรียบร้อย!',
+        text: `ผูกเช็คชีทกับ ${data.machine} และลงในปฏิทินเรียบร้อยแล้ว (${newPlansBatch.length} รายการ)`,
+        confirmButtonColor: '#4F46E5'
+      });
+    }
+
+    // ================= 5. CHECK SHEET BUILDER (WITH LINE FILTER) =================
     function renderCheckSheetsGallery() {
       const container = document.getElementById('checksheets-cards-grid');
       if (!container) return;
       container.innerHTML = '';
 
-      if (state.checkSheets.length === 0) {
+      const lineFilterEl = document.getElementById('checksheet-line-filter');
+      const lineFilter = lineFilterEl ? lineFilterEl.value : 'ALL';
+
+      const filteredCheckSheets = (lineFilter === 'ALL')
+        ? state.checkSheets
+        : state.checkSheets.filter(s => 
+            (s.name && s.name.toUpperCase().includes(lineFilter.toUpperCase())) ||
+            (s.department && s.department.toUpperCase().includes(lineFilter.toUpperCase()))
+          );
+
+      if (filteredCheckSheets.length === 0) {
         container.innerHTML = `
           <div class="col-span-2 bg-white p-12 rounded-2xl border border-slate-100 text-center text-slate-400">
             <i data-lucide="clipboard" class="w-12 h-12 text-indigo-400 mx-auto mb-2"></i>
-            <p class="font-bold text-slate-700">ยังไม่มีแบบฟอร์มเช็คชีท</p>
+            <p class="font-bold text-slate-700">ไม่พบแบบฟอร์มเช็คชีทสำหรับ ${lineFilter === 'ALL' ? 'ระบบนี้' : lineFilter}</p>
             <p class="text-xs text-slate-500 mt-1">กดปุ่ม <b>"สร้างแบบฟอร์มเช็คชีทใหม่"</b> ด้านบนเพื่อเริ่มสร้างแบบฟอร์ม</p>
           </div>
         `;
@@ -1150,7 +2634,7 @@
         return;
       }
 
-      state.checkSheets.forEach((cs, idx) => {
+      filteredCheckSheets.forEach((cs, idx) => {
         const card = document.createElement('div');
         card.className = 'bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between space-y-4 hover:border-indigo-200 transition';
         
@@ -1476,1189 +2960,13 @@
       openCreatePlanFromCheckSheetModal(sheetId);
     }
 
-    // ================= 2. PM PLANNER & SCHEDULE MATRIX =================
-    function renderPlanner() {
-      const monthNames = [
-        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-      ];
-      document.getElementById('calendar-month-year-title').innerText = `${monthNames[state.currentMonth]} ${state.currentYear + 543}`;
-
-      const grid = document.getElementById('calendar-grid-cells');
-      grid.innerHTML = '';
-
-      const firstDay = new Date(state.currentYear, state.currentMonth, 1).getDay();
-      const totalDays = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
-
-      for (let i = 0; i < firstDay; i++) {
-        const empty = document.createElement('div');
-        empty.className = 'h-24 sm:h-28 rounded-xl bg-slate-50/50 border border-transparent';
-        grid.appendChild(empty);
-      }
-
-      const today = new Date();
-      for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = today.getFullYear() === state.currentYear && today.getMonth() === state.currentMonth && today.getDate() === day;
-
-        const dayPlans = state.plans.filter(p => p.date === dateStr);
-        const completedCount = dayPlans.filter(p => p.status === 'completed').length;
-        const totalDayPlans = dayPlans.length;
-
-        const cell = document.createElement('div');
-        cell.className = `h-24 sm:h-28 p-2 rounded-xl border flex flex-col justify-between transition cursor-pointer hover:shadow-md ${
-          isToday ? 'bg-indigo-50/40 border-indigo-300 ring-2 ring-indigo-500/20' : 'bg-white border-slate-100 hover:border-indigo-200'
-        }`;
-        cell.onclick = () => showDayScheduleModal(dateStr, dayPlans);
-
-        let badgeHtml = '';
-        if (totalDayPlans > 0) {
-          const isAllDone = completedCount === totalDayPlans;
-          badgeHtml = `
-            <div class="mt-1">
-              <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                isAllDone ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
-              }">
-                PM: ${completedCount}/${totalDayPlans}
-              </span>
-            </div>
-          `;
-        }
-
-        cell.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold ${isToday ? 'text-indigo-600 bg-indigo-100 px-1.5 rounded-full' : 'text-slate-700'}">${day}</span>
-            ${isToday ? '<span class="text-[9px] font-bold text-indigo-600">วันนี้</span>' : ''}
-          </div>
-          ${badgeHtml}
-          <div class="text-[9px] text-slate-400 text-right mt-auto">คลิกดู &rarr;</div>
-        `;
-        grid.appendChild(cell);
-      }
-
-      renderPlannerMatrix();
-    }
-
-    function renderPlannerMatrix() {
-      const tbody = document.getElementById('planner-matrix-tbody');
-      tbody.innerHTML = '';
-
-      state.machines.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/80 transition';
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-semibold text-slate-800">${m.name}</td>
-          <td class="px-4 py-3 text-slate-600"><span class="text-xs bg-slate-100 px-2 py-0.5 rounded">${m.location}</span></td>
-          <td class="px-4 py-3 text-slate-600">${m.station}</td>
-          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-emerald-400"></span></td>
-          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-emerald-400"></span></td>
-          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-indigo-400"></span></td>
-          <td class="px-4 py-3 text-center"><span class="w-3 h-3 inline-block rounded-full bg-indigo-400"></span></td>
-          <td class="px-4 py-3 text-right">
-            <button onclick="quickInspect('${m.name}')" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-lg font-semibold transition">
-              ตรวจเช็ค
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function changeMonth(delta) {
-      state.currentMonth += delta;
-      if (state.currentMonth < 0) {
-        state.currentMonth = 11;
-        state.currentYear -= 1;
-      } else if (state.currentMonth > 11) {
-        state.currentMonth = 0;
-        state.currentYear += 1;
-      }
-      renderPlanner();
-    }
-
-    function setPlannerView(view) {
-      const calView = document.getElementById('planner-calendar-view');
-      const matrixView = document.getElementById('planner-matrix-view');
-      const btnCal = document.getElementById('btn-view-cal');
-      const btnMatrix = document.getElementById('btn-view-matrix');
-
-      if (view === 'calendar') {
-        calView.classList.remove('hidden');
-        matrixView.classList.add('hidden');
-        btnCal.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white shadow-sm text-indigo-900 transition';
-        btnMatrix.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-900 transition';
-      } else {
-        calView.classList.add('hidden');
-        matrixView.classList.remove('hidden');
-        btnMatrix.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white shadow-sm text-indigo-900 transition';
-        btnCal.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-900 transition';
-      }
-    }
-
-    function showDayScheduleModal(dateStr, dayPlans) {
-      let listHtml = '';
-      if (dayPlans.length === 0) {
-        listHtml = '<p class="text-sm text-slate-400 py-4 text-center">ไม่มีแผนงาน PM พิเศษในวันนี้</p>';
-      } else {
-        listHtml = dayPlans.map(p => {
-          const sheet = state.checkSheets.find(s => s.id === p.checkSheetId);
-          return `
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-2 border border-slate-100">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-slate-800 text-sm">${p.machineName}</h4>
-                  <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">${p.frequency}</span>
-                </div>
-                <p class="text-xs text-slate-500 mt-0.5">📋 ${sheet ? sheet.name : 'แบบฟอร์มเช็คชีท'} | ผู้ตรวจ: ${p.assignee || 'ทีม PM'}</p>
-              </div>
-              <button onclick="quickInspect('${p.machineName}'); Swal.close();" class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-700 transition">
-                เปิดตรวจเช็ค &rarr;
-              </button>
-            </div>
-          `;
-        }).join('');
-      }
-
-      Swal.fire({
-        title: `📅 แผนงาน PM ประจำวันที่ ${dateStr}`,
-        html: `<div class="text-left mt-3 max-h-80 overflow-y-auto">${listHtml}</div>`,
-        confirmButtonText: 'ปิดหน้าต่าง',
-        confirmButtonColor: '#4F46E5'
-      });
-    }
-
-    // ================= BIND CHECK SHEET TO MACHINE & SCHEDULE IN CALENDAR =================
-    function openCreatePlanFromCheckSheetModal(preselectedSheetId = null) {
-      if (state.checkSheets.length === 0) {
-        Swal.fire({
-          icon: 'info',
-          title: 'ยังไม่มีแบบฟอร์มเช็คชีท',
-          text: 'กรุณาสร้างแบบฟอร์มเช็คชีทก่อนในแท็บ "แบบฟอร์มเช็คชีท"',
-          confirmButtonText: 'ไปสร้างเช็คชีท',
-          confirmButtonColor: '#4F46E5'
-        }).then(() => switchTab('checksheets'));
-        return;
-      }
-
-      const sheetOptions = state.checkSheets.map(s => `
-        <option value="${s.id}" ${preselectedSheetId === s.id ? 'selected' : ''}>${s.name} (${s.items.length} จุดตรวจ - ${s.department})</option>
-      `).join('');
-
-      const machineOptions = state.machines.map(m => `
-        <option value="${m.name}">${m.name} (${m.station}) - ${m.location}</option>
-      `).join('');
-
-      Swal.fire({
-        title: '📅 ผูกเช็คชีทสร้างแผน PM ลงปฏิทิน',
-        width: '680px',
-        html: `
-          <div class="text-left space-y-4 text-sm max-h-[75vh] overflow-y-auto pr-1">
-            
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">1. เลือกแบบฟอร์มเช็คชีทที่ต้องการใช้ *</label>
-              <select id="plan-sheet-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
-                ${sheetOptions}
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">2. เลือกเครื่องจักรที่ต้องการผูกแผน *</label>
-              <select id="plan-machine-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
-                ${machineOptions}
-              </select>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">3. ความถี่ของแผน (Frequency) *</label>
-                <select id="plan-freq-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
-                  <option value="รายวัน" selected>ประจำวัน (Daily)</option>
-                  <option value="เริ่มสตาร์ทเครื่อง">เริ่มสตาร์ทเครื่อง (Pre-startup)</option>
-                  <option value="ประจำสัปดาห์">ประจำสัปดาห์ (Weekly)</option>
-                  <option value="ทุก 15 วัน">ทุก 15 วัน (Bi-weekly)</option>
-                  <option value="ประจำเดือน">ประจำเดือน (Monthly)</option>
-                  <option value="ประจำ 3 เดือน">ประจำ 3 เดือน (Quarterly)</option>
-                  <option value="ประจำ 6 เดือน">ประจำ 6 เดือน (Semi-Annual)</option>
-                  <option value="ประจำปี">ประจำปี (Annual)</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">4. วันที่เริ่มตามแผน *</label>
-                <input type="date" id="plan-start-date" value="${getTodayDateString()}" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">5. การสร้างตารางอัตโนมัติ (Recurrence)</label>
-                <select id="plan-recurrence-select" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
-                  <option value="month" selected>สร้างซ้ำตลอดทั้งเดือนนี้ (Auto Fill Month)</option>
-                  <option value="single">เฉพาะวันที่เลือกเท่านั้น</option>
-                  <option value="weekly">ทุกสัปดาห์ในวันเดียวกัน</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">6. ผู้รับผิดชอบ / ช่างซ่อมบำรุง</label>
-                <input type="text" id="plan-assignee-input" placeholder="เช่น ทีม PM ประจำกะ / ช่างปัญญา" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
-              </div>
-            </div>
-
-          </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'บันทึกแผน & ซิงค์ลงปฏิทิน',
-        cancelButtonText: 'ยกเลิก',
-        confirmButtonColor: '#4F46E5',
-        preConfirm: () => {
-          const sheetId = document.getElementById('plan-sheet-select').value;
-          const machine = document.getElementById('plan-machine-select').value;
-          const freq = document.getElementById('plan-freq-select').value;
-          const startDate = document.getElementById('plan-start-date').value;
-          const recurrence = document.getElementById('plan-recurrence-select').value;
-          const assignee = document.getElementById('plan-assignee-input').value || 'ทีม PM ประจำกะ';
-
-          if (!sheetId || !machine || !startDate) {
-            Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
-            return false;
-          }
-
-          return { sheetId, machine, freq, startDate, recurrence, assignee };
-        }
-      }).then(res => {
-        if (res.isConfirmed) {
-          executeSavePlanFromCheckSheet(res.value);
-        }
-      });
-    }
-
-    function executeSavePlanFromCheckSheet(data) {
-      const parts = data.startDate.split('-');
-      const year = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1;
-      const startDay = parseInt(parts[2]);
-
-      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-      let newPlansBatch = [];
-
-      if (data.recurrence === 'month') {
-        for (let d = 1; d <= totalDaysInMonth; d++) {
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-          newPlansBatch.push({
-            id: 'PLN-' + Date.now() + '-' + d,
-            machineName: data.machine,
-            checkSheetId: data.sheetId,
-            frequency: data.freq,
-            date: dateStr,
-            assignee: data.assignee,
-            status: 'pending'
-          });
-        }
-      } else if (data.recurrence === 'weekly') {
-        for (let d = startDay; d <= totalDaysInMonth; d += 7) {
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-          newPlansBatch.push({
-            id: 'PLN-' + Date.now() + '-' + d,
-            machineName: data.machine,
-            checkSheetId: data.sheetId,
-            frequency: data.freq,
-            date: dateStr,
-            assignee: data.assignee,
-            status: 'pending'
-          });
-        }
-      } else {
-        newPlansBatch.push({
-          id: 'PLN-' + Date.now(),
-          machineName: data.machine,
-          checkSheetId: data.sheetId,
-          frequency: data.freq,
-          date: data.startDate,
-          assignee: data.assignee,
-          status: 'pending'
-        });
-      }
-
-      state.plans = state.plans.concat(newPlansBatch);
-      localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
-      renderPlanner();
-
-      if (state.gasUrl && newPlansBatch.length > 0) {
-        fetch(state.gasUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'savePlans', payload: newPlansBatch })
-        }).catch(e => console.warn('GAS Sync plans:', e));
-      }
-
-      Swal.fire({
-        icon: 'success',
-        title: 'บันทึกแผนงานเรียบร้อย!',
-        text: `ผูกเช็คชีทกับ ${data.machine} และลงในปฏิทินเรียบร้อยแล้ว (${newPlansBatch.length} รายการ)`,
-        confirmButtonColor: '#4F46E5'
-      });
-    }
-
-    // ================= 3. FIELD INSPECTION (SMART CHECK SHEET RESOLVER) =================
-    function loadChecklistForSelectedMachine(forcedMachineName = null) {
-      const machineSelect = document.getElementById('inspect-machine-select');
-      const machineName = forcedMachineName || machineSelect.value;
-      const frequency = document.getElementById('inspect-frequency-select').value;
-      const checkSheetSelect = document.getElementById('inspect-checksheet-select');
-
-      const container = document.getElementById('checklist-container');
-      const emptyState = document.getElementById('checklist-empty-state');
-
-      if (!machineName) {
-        container.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        return;
-      }
-
-      // 1. Find Machine (tolerant matching)
-      const machine = state.machines.find(m => 
-        m.name.toLowerCase() === machineName.toLowerCase() ||
-        m.id.toLowerCase() === machineName.toLowerCase() ||
-        m.name.toLowerCase().replace(/\s+/g, '') === machineName.toLowerCase().replace(/\s+/g, '') ||
-        m.name.toLowerCase().replace(/-/g, ' ') === machineName.toLowerCase().replace(/-/g, ' ') ||
-        machineName.toLowerCase().includes(m.name.toLowerCase()) ||
-        m.name.toLowerCase().includes(machineName.toLowerCase())
-      );
-      if (!machine) return;
-
-      machineSelect.value = machine.name;
-      state.currentInspectMachine = machine;
-      state.currentInspectPhotos = {};
-      state.currentInspectValues = {};
-      state.currentInspectResults = {};
-      state.currentInspectRemarks = {};
-
-      // 2. Populate CheckSheet dropdown
-      if (checkSheetSelect) {
-        checkSheetSelect.innerHTML = '<option value="">-- เลือกแบบฟอร์มเช็คชีท --</option>';
-        state.checkSheets.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          opt.innerText = `${s.name} (${s.items.length} จุดตรวจ)`;
-          checkSheetSelect.appendChild(opt);
-        });
-      }
-
-      // 3. SMART RESOLUTION FOR CHECK SHEET:
-      let checkSheet = null;
-
-      // Priority 1: Machine's explicit bound check sheet
-      if (machine.defaultCheckSheetId) {
-        checkSheet = state.checkSheets.find(s => s.id === machine.defaultCheckSheetId);
-      }
-
-      // Priority 2: From PM Plans created for this machine
-      if (!checkSheet) {
-        const matchingPlans = state.plans.filter(p => 
-          p.machineName && (
-            p.machineName.toLowerCase() === machine.name.toLowerCase() ||
-            p.machineName.toLowerCase() === machine.id.toLowerCase()
-          ) && p.checkSheetId
-        );
-
-        const freqPlan = matchingPlans.find(p => p.frequency === frequency);
-        if (freqPlan && freqPlan.checkSheetId) {
-          checkSheet = state.checkSheets.find(s => s.id === freqPlan.checkSheetId);
-        } else if (matchingPlans.length > 0 && matchingPlans[0].checkSheetId) {
-          checkSheet = state.checkSheets.find(s => s.id === matchingPlans[0].checkSheetId);
-        }
-      }
-
-      // Priority 3: Smart Match by Station & Production Line in CheckSheet Name
-      // e.g. "Splicer&Mill roll" matches "Splicer&Mill roll-BHS (รายวัน)"
-      // e.g. "Single" matches "Single-BHS (รายวัน)"
-      if (!checkSheet && state.checkSheets.length > 0) {
-        const stationClean = machine.station.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const locClean = machine.location.toLowerCase();
-        
-        // Exact Station + Line match
-        checkSheet = state.checkSheets.find(s => {
-          const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-          return (nameClean.includes(stationClean) || stationClean.includes(nameClean)) && s.name.toLowerCase().includes(locClean);
-        });
-
-        // Station name match
-        if (!checkSheet) {
-          checkSheet = state.checkSheets.find(s => {
-            const nameClean = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            return nameClean.includes(stationClean) || stationClean.includes(nameClean) || s.name.toLowerCase().includes(machine.station.toLowerCase());
-          });
-        }
-
-        // Line name match
-        if (!checkSheet) {
-          checkSheet = state.checkSheets.find(s => s.name.toLowerCase().includes(locClean));
-        }
-      }
-
-      // Priority 4: Fallback to the first available check sheet
-      if (!checkSheet && state.checkSheets.length > 0) {
-        checkSheet = state.checkSheets[0];
-      }
-
-      if (checkSheet) {
-        if (checkSheetSelect) checkSheetSelect.value = checkSheet.id;
-        state.currentCheckSheet = checkSheet;
-        state.currentChecklistItems = checkSheet.items || [];
-      } else {
-        state.currentCheckSheet = null;
-        state.currentChecklistItems = [];
-      }
-
-      document.getElementById('current-inspect-machine-name').innerText = machine.name;
-      document.getElementById('current-inspect-station-badge').innerText = machine.station;
-      document.getElementById('current-inspect-meta').innerText = `📋 ${checkSheet ? checkSheet.name : 'ยังไม่มีเช็คชีท'} | สาย: ${machine.location} | รอบ: ${frequency} | ทั้งหมด ${state.currentChecklistItems.length} จุดตรวจ`;
-
-      renderChecklistItems(state.currentChecklistItems);
-
-      emptyState.classList.add('hidden');
-      container.classList.remove('hidden');
-    }
-
-    function onCheckSheetDropdownChange() {
-      const sheetId = document.getElementById('inspect-checksheet-select').value;
-      const checkSheet = state.checkSheets.find(s => s.id === sheetId);
-      if (checkSheet && state.currentInspectMachine) {
-        state.currentCheckSheet = checkSheet;
-        state.currentChecklistItems = checkSheet.items || [];
-        
-        document.getElementById('current-inspect-meta').innerText = `📋 ${checkSheet.name} | สาย: ${state.currentInspectMachine.location} | รอบ: ${document.getElementById('inspect-frequency-select').value} | ทั้งหมด ${state.currentChecklistItems.length} จุดตรวจ`;
-        
-        renderChecklistItems(state.currentChecklistItems);
-      }
-    }
-
-    function renderChecklistItems(items) {
-      const list = document.getElementById('checklist-items-list');
-      list.innerHTML = '';
-
-      if (items.length === 0) {
-        list.innerHTML = `
-          <div class="p-8 bg-white rounded-2xl border border-slate-100 text-center text-slate-500">
-            <p class="font-bold text-slate-700">ยังไม่มีรายการเช็คชีทสำหรับเครื่องนี้</p>
-            <p class="text-xs text-slate-400 mt-1">กรุณาเลือกแบบฟอร์มเช็คชีทจากดรอปดาวน์ด้านบน หรือไปสร้างเช็คชีทใหม่ในแท็บ "แบบฟอร์มเช็คชีท"</p>
-          </div>
-        `;
-        return;
-      }
-
-      items.forEach((item, idx) => {
-        const itemId = 'CHK-ROW-' + (idx + 1);
-        state.currentInspectResults[itemId] = 'ผ่าน';
-
-        const isForcePhoto = item.forcePhoto === 'บังคับ';
-        const isForceValue = item.forceValue === 'บังคับ';
-
-        const card = document.createElement('div');
-        card.className = 'bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3 transition';
-        card.id = `card-${itemId}`;
-
-        card.innerHTML = `
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
-                <h4 class="font-bold text-slate-800 text-sm sm:text-base">${item.taskName}</h4>
-                ${isForcePhoto ? '<span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold border border-rose-200">📷 บังคับถ่ายรูป</span>' : ''}
-                ${isForceValue ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold border border-blue-200">📝 บังคับระบุค่า</span>' : ''}
-              </div>
-              <p class="text-xs text-slate-500 flex items-center gap-1">
-                <span class="font-semibold text-slate-600">มาตรฐานการตรวจ:</span> 
-                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-mono font-medium">${item.standard || 'ทำงานปกติ'}</span>
-              </p>
-            </div>
-
-            <div class="flex items-center gap-2 pt-2 sm:pt-0">
-              <button onclick="setInspectionResult('${itemId}', 'ผ่าน')" id="btn-pass-${itemId}" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-500 text-white shadow">
-                <i data-lucide="check" class="w-4 h-4"></i> ผ่าน
-              </button>
-              <button onclick="setInspectionResult('${itemId}', 'ไม่ผ่าน')" id="btn-fail-${itemId}" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700">
-                <i data-lucide="x" class="w-4 h-4"></i> ไม่ผ่าน
-              </button>
-            </div>
-          </div>
-
-          ${isForceValue ? `
-            <div class="pt-2 border-t border-slate-100">
-              <label class="block text-xs font-bold text-blue-700 mb-1">📝 ค่าที่ตรวจวัดได้จริง (บังคับระบุค่า) *</label>
-              <input type="text" id="value-input-${itemId}" oninput="state.currentInspectValues['${itemId}'] = this.value" placeholder="เช่น 145°C, 7.2 Bar, อยู่ในขีดปกติ..." class="w-full sm:w-80 px-3 py-1.5 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 bg-blue-50/20 font-mono">
-            </div>
-          ` : ''}
-
-          <div id="remark-box-${itemId}" class="hidden pt-2 border-t border-slate-100 space-y-2">
-            <label class="block text-xs font-bold text-rose-600">⚠️ ระบุอาการ/ปัญหาที่ตรวจพบ (บังคับ)</label>
-            <textarea id="remark-input-${itemId}" oninput="state.currentInspectRemarks['${itemId}'] = this.value" rows="2" placeholder="เช่น น็อตยึดหลวม, สายพานมีรอยแตก, อุณหภูมิเกินเกณฑ์..." class="w-full px-3 py-2 rounded-xl border border-rose-200 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none bg-rose-50/30"></textarea>
-          </div>
-
-          <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <button onclick="openLiveCamera('${itemId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
-                <i data-lucide="camera" class="w-4 h-4"></i> ถ่ายภาพสดจากกล้อง
-              </button>
-              
-              <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-                <i data-lucide="aperture" class="w-4 h-4"></i> ถ่ายด่วน (กล้องมือถือ)
-                <input type="file" accept="image/*" capture="environment" onchange="handleStrictCameraUpload(event, '${itemId}')" class="hidden">
-              </label>
-            </div>
-
-            <div id="photo-strip-${itemId}" class="flex items-center gap-2 overflow-x-auto py-1"></div>
-          </div>
-        `;
-        list.appendChild(card);
-      });
-
-      lucide.createIcons();
-    }
-
-    function setInspectionResult(itemId, result) {
-      state.currentInspectResults[itemId] = result;
-      const btnPass = document.getElementById(`btn-pass-${itemId}`);
-      const btnFail = document.getElementById(`btn-fail-${itemId}`);
-      const remarkBox = document.getElementById(`remark-box-${itemId}`);
-
-      if (result === 'ผ่าน') {
-        btnPass.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-500 text-white shadow';
-        btnFail.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700';
-        remarkBox.classList.add('hidden');
-      } else {
-        btnFail.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-rose-600 text-white shadow';
-        btnPass.className = 'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700';
-        remarkBox.classList.remove('hidden');
-        if (!state.currentInspectPhotos[itemId] || state.currentInspectPhotos[itemId].length === 0) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'ตรวจพบสิ่งผิดปกติ!',
-            text: 'กรุณาถ่ายรูปจุดที่ชำรุด/มีปัญหาเพื่อแนบในรายงาน',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        }
-      }
-    }
-
-    function markAllPass() {
-      state.currentChecklistItems.forEach((item, idx) => {
-        const itemId = 'CHK-ROW-' + (idx + 1);
-        setInspectionResult(itemId, 'ผ่าน');
-      });
-      Swal.fire({ icon: 'success', title: 'ตั้งค่าเป็น "ผ่าน" ทั้งหมดแล้ว', timer: 1200, showConfirmButton: false });
-    }
-
-    // ================= CLIENT-SIDE IMAGE COMPRESSION (BLAZING FAST) =================
-    function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onload = function() {
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-              }
-            } else {
-              if (height > maxHeight) {
-                width = Math.round((width * maxHeight) / height);
-                height = maxHeight;
-              }
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            
-            // High quality image rendering
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            resolve(compressedDataUrl);
-          };
-          img.onerror = reject;
-          img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function handleStrictCameraUpload(event, itemId) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      // Quick toast while compressing
-      const toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 1000
-      });
-      toast.fire({ icon: 'info', title: 'กำลังปรับขนาดภาพให้อ่านเร็ว...' });
-
-      try {
-        const compressedBase64 = await compressImageFile(file, 800, 800, 0.65);
-        addPhotoToItem(itemId, compressedBase64);
-        toast.fire({ icon: 'success', title: 'แนบรูปภาพเรียบร้อย (ขนาดเล็ก โหลดไว)' });
-      } catch (err) {
-        console.warn('Compress error:', err);
-        const reader = new FileReader();
-        reader.onload = (e) => addPhotoToItem(itemId, e.target.result);
-        reader.readAsDataURL(file);
-      } finally {
-        event.target.value = ''; // Reset input
-      }
-    }
-
-    function openLiveCamera(itemId) {
-      state.activeCameraItemId = itemId;
-      const modal = document.getElementById('camera-modal');
-      modal.classList.remove('hidden');
-      startCameraStream();
-    }
-
-    function startCameraStream() {
-      const video = document.getElementById('live-camera-feed');
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: state.cameraFacingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        }).then(stream => {
-          state.cameraStream = stream;
-          video.srcObject = stream;
-        }).catch(err => {
-          console.warn('Camera stream error:', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'ไม่สามารถเปิดกล้องได้',
-            text: 'กรุณาอนุญาตการเข้าถึงกล้องบนเบราว์เซอร์ หรือใช้ปุ่ม "ถ่ายด่วน (กล้องมือถือ)"'
-          });
-          closeCameraModal();
-        });
-      }
-    }
-
-    function flipCameraFacing() {
-      state.cameraFacingMode = state.cameraFacingMode === 'environment' ? 'user' : 'environment';
-      if (state.cameraStream) {
-        state.cameraStream.getTracks().forEach(track => track.stop());
-      }
-      startCameraStream();
-    }
-
-    function takeLiveSnapshot() {
-      const video = document.getElementById('live-camera-feed');
-      const canvas = document.getElementById('live-camera-canvas');
-      
-      // Resize to lightweight dimensions (max 800px)
-      let w = video.videoWidth || 640;
-      let h = video.videoHeight || 480;
-      const maxDim = 800;
-      if (w > maxDim || h > maxDim) {
-        if (w > h) {
-          h = Math.round((h * maxDim) / w);
-          w = maxDim;
-        } else {
-          w = Math.round((w * maxDim) / h);
-          h = maxDim;
-        }
-      }
-
-      canvas.width = w;
-      canvas.height = h;
-
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(video, 0, 0, w, h);
-
-      // Lightweight compressed JPEG quality 0.65
-      const base64Img = canvas.toDataURL('image/jpeg', 0.65);
-      addPhotoToItem(state.activeCameraItemId, base64Img);
-
-      closeCameraModal();
-      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย (ขนาดเล็ก โหลดไว)', timer: 1000, showConfirmButton: false });
-    }
-
-    function closeCameraModal() {
-      const modal = document.getElementById('camera-modal');
-      modal.classList.add('hidden');
-      if (state.cameraStream) {
-        state.cameraStream.getTracks().forEach(track => track.stop());
-        state.cameraStream = null;
-      }
-    }
-
-    function addPhotoToItem(itemId, base64) {
-      if (!state.currentInspectPhotos[itemId]) {
-        state.currentInspectPhotos[itemId] = [];
-      }
-      if (state.currentInspectPhotos[itemId].length >= 5) {
-        Swal.fire({ icon: 'info', title: 'แนบได้สูงสุด 5 ภาพต่อรายการ' });
-        return;
-      }
-      state.currentInspectPhotos[itemId].push(base64);
-      renderPhotoStrip(itemId);
-    }
-
-    function removePhotoFromItem(itemId, index) {
-      if (state.currentInspectPhotos[itemId]) {
-        state.currentInspectPhotos[itemId].splice(index, 1);
-        renderPhotoStrip(itemId);
-      }
-    }
-
-    function renderPhotoStrip(itemId) {
-      const strip = document.getElementById(`photo-strip-${itemId}`);
-      if (!strip) return;
-      strip.innerHTML = '';
-
-      const photos = state.currentInspectPhotos[itemId] || [];
-      photos.forEach((img, idx) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'relative flex-shrink-0 group';
-        thumb.innerHTML = `
-          <img src="${img}" onclick="openLightbox('${img}', 'รูปที่ ${idx + 1}')" class="w-12 h-12 rounded-lg object-cover border border-slate-200 cursor-pointer">
-          <button onclick="removePhotoFromItem('${itemId}', ${idx})" class="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow hover:bg-rose-600">
-            &times;
-          </button>
-        `;
-        strip.appendChild(thumb);
-      });
-    }
-
-    // ================= SUBMISSION WITH STRICT VALIDATION =================
-    async function submitInspection() {
-      const inspectorName = document.getElementById('inspector-name-input').value.trim();
-      if (!inspectorName) {
-        Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อผู้ตรวจเช็ค' });
-        return;
-      }
-
-      const machine = state.currentInspectMachine;
-      const frequency = document.getElementById('inspect-frequency-select').value;
-      const items = state.currentChecklistItems;
-
-      if (!machine || items.length === 0) return;
-
-      // 1. Strict Validation
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const itemId = 'CHK-ROW-' + (i + 1);
-        const result = state.currentInspectResults[itemId] || 'ผ่าน';
-        const photos = state.currentInspectPhotos[itemId] || [];
-        const val = state.currentInspectValues[itemId] || '';
-
-        if (item.forcePhoto === 'บังคับ' && photos.length === 0) {
-          Swal.fire({
-            icon: 'error',
-            title: 'ยังไม่ได้ถ่ายรูปประกอบ!',
-            text: `หัวข้อที่ #${i + 1}: "${item.taskName}" เป็นรายการที่ "บังคับถ่ายรูป"`
-          });
-          return;
-        }
-
-        if (item.forceValue === 'บังคับ' && (!val || val.trim() === '')) {
-          Swal.fire({
-            icon: 'error',
-            title: 'ยังไม่ได้ระบุค่าที่วัดได้!',
-            text: `หัวข้อที่ #${i + 1}: "${item.taskName}" เป็นรายการที่ "บังคับระบุค่า"`
-          });
-          return;
-        }
-
-        if (result === 'ไม่ผ่าน' && (!state.currentInspectRemarks[itemId] || state.currentInspectRemarks[itemId].trim() === '')) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'กรุณาระบุหมายเหตุ/อาการที่พบ',
-            text: `ในหัวข้อ: "${item.taskName}" ที่ระบุผลว่า ไม่ผ่าน`
-          });
-          return;
-        }
-      }
-
-      Swal.fire({
-        title: 'กำลังบันทึกข้อมูลด่วน...',
-        html: '<div class="text-xs text-slate-500 mt-1">ส่งผลการตรวจและอัปโหลดภาพบีบอัดความเร็วสูงขึ้น Google Drive & Sheets</div>',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      const submissionPayload = {
-        inspector: inspectorName,
-        machineName: machine.name,
-        station: machine.station,
-        frequency: frequency,
-        checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
-        items: items.map((item, idx) => {
-          const itemId = 'CHK-ROW-' + (idx + 1);
-          return {
-            id: itemId,
-            taskName: item.taskName,
-            standard: item.standard,
-            measuredValue: state.currentInspectValues[itemId] || '',
-            result: state.currentInspectResults[itemId] || 'ผ่าน',
-            remark: state.currentInspectRemarks[itemId] || '',
-            images: state.currentInspectPhotos[itemId] || []
-          };
-        })
-      };
-
-      submissionPayload.items.forEach(it => {
-        if (it.result === 'ไม่ผ่าน') {
-          const newDefect = {
-            logId: 'DEF-' + Date.now(),
-            inspector: inspectorName,
-            machineName: machine.name,
-            station: machine.station,
-            frequency: frequency,
-            taskName: it.taskName,
-            result: 'ไม่ผ่าน',
-            imageUrl: it.images[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
-            remark: it.remark,
-            timestamp: new Date().toLocaleString('th-TH'),
-            status: 'รอดำเนินการแก้ไข'
-          };
-          state.defects.unshift(newDefect);
-        }
-      });
-      localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
-
-      const todayStr = getTodayDateString();
-      const planIdx = state.plans.findIndex(p => p.machineName === machine.name && p.date === todayStr);
-      if (planIdx >= 0) {
-        state.plans[planIdx].status = 'completed';
-      } else {
-        state.plans.push({
-          id: 'PLN-' + Date.now(),
-          machineName: machine.name,
-          frequency: frequency,
-          date: todayStr,
-          assignee: inspectorName,
-          status: 'completed'
-        });
-      }
-      localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
-
-      if (state.gasUrl) {
-        try {
-          await fetch(state.gasUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'submitInspection', payload: submissionPayload })
-          });
-        } catch (err) {
-          console.warn('Google Sheet GAS Sync warning:', err);
-        }
-      }
-
-      Swal.fire({
-        icon: 'success',
-        title: 'บันทึกสำเร็จรวดเร็ว! ⚡',
-        text: `ตรวจเช็ค ${machine.name} เรียบร้อยแล้ว`,
-        confirmButtonColor: '#4F46E5',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        // Reset form inputs for next inspection
-        state.currentInspectPhotos = {};
-        state.currentInspectValues = {};
-        state.currentInspectRemarks = {};
-        loadChecklistForSelectedMachine(machine.name);
-        if (state.userRole === 'supervisor') switchTab('dashboard');
-      });
-    }
-
-    // ================= 4. DASHBOARD (WITH DATE PICKER) =================
-    let lineChartInstance = null;
-
-    function setDashboardToday() {
-      state.dashboardSelectedDate = getTodayDateString();
-      document.getElementById('dashboard-date-picker').value = state.dashboardSelectedDate;
-      renderDashboard();
-    }
-
-    function changeDashboardDate(newDate) {
-      if (!newDate) return;
-      state.dashboardSelectedDate = newDate;
-      renderDashboard();
-    }
-
-    function renderDashboard() {
-      const selectedDate = state.dashboardSelectedDate || getTodayDateString();
-      const lineFilter = document.getElementById('dashboard-line-filter').value;
-      const filteredMachines = lineFilter === 'ALL' 
-        ? state.machines 
-        : state.machines.filter(m => m.location === lineFilter);
-
-      const totalCount = filteredMachines.length;
-      let doneCount = 0;
-      let defectCount = 0;
-
-      // Format selected date in Thai
-      const parts = selectedDate.split('-');
-      const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const dateLabel = dObj.toLocaleDateString('th-TH', dateOptions);
-      const isToday = selectedDate === getTodayDateString();
-      
-      document.getElementById('current-date-label').innerHTML = `
-        <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
-        <span>ข้อมูลประจำ ${dateLabel}</span>
-        ${isToday ? '<span class="text-[10px] bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full ml-1">วันนี้</span>' : ''}
-      `;
-
-      const machineStatuses = {};
-      filteredMachines.forEach(m => {
-        const plan = state.plans.find(p => p.machineName === m.name && p.date === selectedDate);
-        const hasDefect = state.defects.some(d => d.machineName === m.name && d.status !== 'แก้ไขเรียบร้อย');
-        
-        if (hasDefect) {
-          machineStatuses[m.name] = 'defect';
-          defectCount++;
-          doneCount++;
-        } else if (plan && plan.status === 'completed') {
-          machineStatuses[m.name] = 'done';
-          doneCount++;
-        } else {
-          machineStatuses[m.name] = 'pending';
-        }
-      });
-
-      const pendingCount = Math.max(0, totalCount - doneCount);
-      const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-
-      document.getElementById('stat-percent').innerText = `${percent}%`;
-      document.getElementById('stat-completed-ratio').innerText = `${doneCount} / ${totalCount} เครื่อง`;
-      document.getElementById('stat-done').innerText = doneCount;
-      document.getElementById('stat-pending').innerText = pendingCount;
-      document.getElementById('stat-defects').innerText = defectCount;
-
-      const isowaDone = state.machines.filter(m => m.location === 'ISOWA' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
-      const bhsDone = state.machines.filter(m => m.location === 'BHS' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
-      const yueliDone = state.machines.filter(m => m.location === 'YUELI' && machineStatuses[m.name] && machineStatuses[m.name] !== 'pending').length;
-
-      document.getElementById('prog-isowa').innerText = `${isowaDone}/10`;
-      document.getElementById('prog-bhs').innerText = `${bhsDone}/10`;
-      document.getElementById('prog-yueli').innerText = `${yueliDone}/10`;
-
-      const gridContainer = document.getElementById('machine-status-grid');
-      gridContainer.innerHTML = '';
-
-      filteredMachines.forEach(m => {
-        const st = machineStatuses[m.name] || 'pending';
-        let bgClass = 'bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-300';
-        let dotClass = 'bg-slate-300';
-        let statusText = 'ยังไม่ตรวจ';
-
-        if (st === 'done') {
-          bgClass = 'bg-emerald-50/80 border-emerald-300 text-emerald-900';
-          dotClass = 'bg-emerald-500';
-          statusText = 'ตรวจแล้ว';
-        } else if (st === 'defect') {
-          bgClass = 'bg-rose-50 border-rose-300 text-rose-900';
-          dotClass = 'bg-rose-500 animate-ping';
-          statusText = 'พบปัญหา';
-        }
-
-        const card = document.createElement('div');
-        card.className = `p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${bgClass}`;
-        card.onclick = () => quickInspect(m.name);
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold">${m.name}</span>
-              <span class="w-2 h-2 rounded-full ${dotClass}"></span>
-            </div>
-            <p class="text-[10px] text-slate-500 truncate mt-0.5">${m.station}</p>
-          </div>
-          <div class="mt-2 pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
-            <span class="font-medium">${statusText}</span>
-            <span class="text-indigo-600 font-bold hover:underline">ตรวจ &rarr;</span>
-          </div>
-        `;
-        gridContainer.appendChild(card);
-      });
-
-      renderLineChart(isowaDone, bhsDone, yueliDone);
-      renderDashboardRecentDefects();
-      lucide.createIcons();
-    }
-
-    function renderLineChart(isowa, bhs, yueli) {
-      const ctx = document.getElementById('lineProgressChart');
-      if (!ctx) return;
-
-      if (lineChartInstance) {
-        lineChartInstance.destroy();
-      }
-
-      lineChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['ISOWA (ตรวจแล้ว)', 'BHS (ตรวจแล้ว)', 'YUELI (ตรวจแล้ว)', 'ยังไม่ตรวจ'],
-          datasets: [{
-            data: [isowa, bhs, yueli, Math.max(0, 30 - (isowa + bhs + yueli))],
-            backgroundColor: ['#6366F1', '#3B82F6', '#0EA5E9', '#E2E8F0'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Prompt', size: 11 } } }
-          },
-          cutout: '70%'
-        }
-      });
-    }
-
-    function renderDashboardRecentDefects() {
-      const container = document.getElementById('dashboard-recent-defects');
-      container.innerHTML = '';
-
-      const recent = state.defects.slice(0, 3);
-      if (recent.length === 0) {
-        container.innerHTML = `<div class="col-span-3 text-center py-6 text-slate-400 text-xs">ไม่พบรายการข้อบกพร่องที่คั่งค้าง ทุกระบบทำงานปกติ 🟢</div>`;
-        return;
-      }
-
-      recent.forEach(d => {
-        const displayImg = formatDriveImageUrl(d.imageUrl);
-        const card = document.createElement('div');
-        card.className = 'flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-xl';
-        card.innerHTML = `
-          <img src="${displayImg}" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition flex-shrink-0 border border-rose-200">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-800 truncate">${d.machineName}</span>
-              <span class="text-[10px] bg-rose-200/60 text-rose-700 px-1.5 py-0.2 rounded font-semibold">${d.status || 'รอซ่อม'}</span>
-            </div>
-            <p class="text-[11px] text-slate-600 font-medium truncate mt-0.5">${d.taskName}</p>
-            <p class="text-[11px] text-rose-600 font-semibold truncate mt-0.5">⚠️ ${d.remark}</p>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function renderDefectGallery() {
-      const container = document.getElementById('defects-cards-grid');
-      container.innerHTML = '';
-
-      const filter = document.getElementById('defect-status-filter').value;
-      const list = filter === 'ALL' ? state.defects : state.defects.filter(d => d.status === filter);
-
-      if (list.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-3 bg-white p-12 rounded-2xl border border-slate-100 text-center text-slate-400">
-            <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-2"></i>
-            <p class="font-bold text-slate-700">ไม่พบรายการปัญหาในหมวดหมู่นี้</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      list.forEach((d, idx) => {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between';
-        
-        let statusBadge = 'bg-rose-100 text-rose-700';
-        if (d.status === 'กำลังดำเนินการซ่อม') statusBadge = 'bg-amber-100 text-amber-800';
-        if (d.status === 'แก้ไขเรียบร้อย') statusBadge = 'bg-emerald-100 text-emerald-700';
-
-        const displayImg = formatDriveImageUrl(d.imageUrl);
-
-        card.innerHTML = `
-          <div>
-            <div class="relative h-48 bg-slate-900 overflow-hidden cursor-pointer" onclick="openLightbox('${displayImg}', '${d.machineName} - ${d.taskName}')">
-              <img src="${displayImg}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
-              <span class="absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-bold shadow ${statusBadge}">
-                ${d.status || 'รอดำเนินการแก้ไข'}
-              </span>
-              <span class="absolute bottom-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-2.5 py-1 rounded-lg font-mono">
-                ${d.machineName}
-              </span>
-            </div>
-
-            <div class="p-5 space-y-2">
-              <div class="flex items-center justify-between text-xs text-slate-400">
-                <span>ผู้ตรวจ: ${d.inspector || 'ไม่ระบุ'}</span>
-                <span>${d.timestamp || 'ล่าสุด'}</span>
-              </div>
-              <h4 class="font-bold text-slate-800 text-sm">${d.taskName}</h4>
-              <p class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-100 font-medium">
-                <b>ปัญหาที่พบ:</b> ${d.remark}
-              </p>
-            </div>
-          </div>
-
-          <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-xs text-slate-500 font-medium">เปลี่ยนสถานะ:</span>
-            <select onchange="updateDefectStatus('${d.logId || idx}', this.value)" class="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none">
-              <option value="รอดำเนินการแก้ไข" ${d.status === 'รอดำเนินการแก้ไข' ? 'selected' : ''}>รอดำเนินการแก้ไข</option>
-              <option value="กำลังดำเนินการซ่อม" ${d.status === 'กำลังดำเนินการซ่อม' ? 'selected' : ''}>กำลังดำเนินการซ่อม</option>
-              <option value="แก้ไขเรียบร้อย" ${d.status === 'แก้ไขเรียบร้อย' ? 'selected' : ''}>แก้ไขเรียบร้อย</option>
-            </select>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      updateDefectBadge();
-    }
-
-    function updateDefectStatus(logId, newStatus) {
-      const defect = state.defects.find((d, idx) => (d.logId === logId || String(idx) === logId));
-      if (defect) {
-        defect.status = newStatus;
-        localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
-        updateDefectBadge();
-
-        if (state.gasUrl) {
-          fetch(state.gasUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'updateDefectStatus', defectId: defect.logId, status: newStatus })
-          }).catch(e => console.warn('GAS Sync defect:', e));
-        }
-
-        Swal.fire({ icon: 'success', title: 'อัปเดตสถานะเรียบร้อย', timer: 1000, showConfirmButton: false });
-      }
-    }
-
-    function quickInspect(machineName) {
-      switchTab('inspect');
-      loadChecklistForSelectedMachine(machineName);
-    }
-
-    // ================= 5. MASTER MACHINES =================
+    // ================= 6. MASTER MACHINES =================
     function renderMasterMachinesTable() {
       const mBody = document.getElementById('master-machines-tbody');
       if (!mBody) return;
       mBody.innerHTML = '';
 
       state.machines.forEach(m => {
-        // Find bound check sheet
         let boundSheet = null;
         if (m.defaultCheckSheetId) {
           boundSheet = state.checkSheets.find(s => s.id === m.defaultCheckSheetId);
@@ -2766,7 +3074,8 @@
             station: d.station,
             checklistKey: `${d.station}-${d.loc}`,
             location: d.loc,
-            status: 'Active'
+            status: 'Active',
+            defaultCheckSheetId: ''
           };
           state.machines.push(newMachine);
           localStorage.setItem('PM_MACHINES', JSON.stringify(state.machines));
@@ -2833,23 +3142,49 @@
       }, 500);
     }
 
-    // ================= 6. QR SCANNER & ROBUST ROUTER =================
+    // ================= 7. QR SCANNER & ROBUST ROUTER (100% RELIABLE) =================
     function toggleQRScannerModal(show) {
       const modal = document.getElementById('qr-scanner-modal');
       if (show) {
         modal.classList.remove('hidden');
-        state.html5QrScanner = new Html5Qrcode('qr-reader');
-        state.html5QrScanner.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          (decodedText) => {
-            handleScannedQR(decodedText);
-            toggleQRScannerModal(false);
-          },
-          (errorMessage) => { }
-        ).catch(err => {
-          console.warn('QR Camera Start error:', err);
-        });
+        renderQRModalQuickSelect();
+
+        // Safe cleanup of existing scanner instance
+        if (state.html5QrScanner) {
+          try { state.html5QrScanner.stop().catch(() => {}); } catch(e) {}
+          state.html5QrScanner = null;
+        }
+
+        try {
+          state.html5QrScanner = new Html5Qrcode('qr-reader');
+          const qrConfig = { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+          
+          state.html5QrScanner.start(
+            { facingMode: 'environment' },
+            qrConfig,
+            (decodedText) => {
+              handleScannedQR(decodedText);
+              toggleQRScannerModal(false);
+            },
+            (errorMessage) => { }
+          ).catch(err => {
+            console.warn('QR Environment Camera failed, trying default camera:', err);
+            // Fallback to any camera
+            Html5Qrcode.getCameras().then(cameras => {
+              if (cameras && cameras.length > 0) {
+                const cameraId = cameras[cameras.length - 1].id;
+                state.html5QrScanner.start(cameraId, qrConfig, (decodedText) => {
+                  handleScannedQR(decodedText);
+                  toggleQRScannerModal(false);
+                }, (e) => {});
+              }
+            }).catch(camErr => {
+              console.warn('Camera access unavailable:', camErr);
+            });
+          });
+        } catch (e) {
+          console.warn('Html5Qrcode init error:', e);
+        }
       } else {
         modal.classList.add('hidden');
         if (state.html5QrScanner) {
@@ -2858,6 +3193,43 @@
           });
         }
       }
+    }
+
+    // Scan QR from photo / file upload (100% Works on any browser / OS without live stream restrictions)
+    async function handleQRFileInput(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+      toast.fire({ icon: 'info', title: 'กำลังวิเคราะห์รูปภาพ QR Code...' });
+
+      try {
+        let tempScanner = new Html5Qrcode('qr-reader-temp', false);
+        const decodedText = await tempScanner.scanFile(file, true);
+        toggleQRScannerModal(false);
+        handleScannedQR(decodedText);
+      } catch (err) {
+        console.warn('QR file scan error:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบ QR Code ในรูปภาพนี้',
+          text: 'กรุณาถ่ายภาพให้เห็น QR Code ชัดเจน หรือเลือกเครื่องจักรจากรายการด้านล่าง'
+        });
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    function renderQRModalQuickSelect() {
+      const select = document.getElementById('qr-modal-machine-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- เลือกเครื่องจักรเพื่อตรวจเช็คทันที --</option>';
+      state.machines.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.name;
+        opt.innerText = `${m.name} (${m.station} - ${m.location})`;
+        select.appendChild(opt);
+      });
     }
 
     function handleScannedQR(text) {
@@ -2877,7 +3249,6 @@
 
       queryMachine = queryMachine.trim();
 
-      // Robust search in state.machines (case-insensitive, whitespace-insensitive, ID or Name)
       const match = state.machines.find(m => 
         m.name.toLowerCase() === queryMachine.toLowerCase() ||
         m.id.toLowerCase() === queryMachine.toLowerCase() ||
@@ -2938,6 +3309,7 @@
           localStorage.removeItem('PM_CHECKSHEETS');
           localStorage.removeItem('PM_DEFECTS');
           localStorage.removeItem('PM_PLANS');
+          localStorage.removeItem('PM_INSPECTION_LOGS');
           syncFromGoogleSheets(false);
         }
       });
