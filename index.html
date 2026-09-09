@@ -694,12 +694,12 @@
   <div id="camera-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center p-4">
     <div class="relative max-w-lg w-full bg-slate-900 rounded-3xl overflow-hidden flex flex-col shadow-2xl">
       <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex items-center justify-center">
-        <video id="live-camera-feed" autoplay playsinline class="w-full h-full object-cover"></video>
+        <video id="live-camera-feed" autoplay playsinline muted class="w-full h-full object-cover bg-black"></video>
         <canvas id="live-camera-canvas" class="hidden"></canvas>
         <div class="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs text-white flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> กล้องสด (Live Camera)
         </div>
-        <button onclick="closeCameraModal()" class="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full hover:bg-black/80">
+        <button onclick="closeCameraModal()" class="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 z-10">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -1455,14 +1455,9 @@
 
           <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-              <button onclick="openLiveCamera('${itemId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+              <button type="button" onclick="openLiveCamera('${itemId}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95">
                 <i data-lucide="camera" class="w-4 h-4"></i> ถ่ายภาพสดจากกล้อง
               </button>
-              
-              <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-                <i data-lucide="aperture" class="w-4 h-4"></i> ถ่ายด่วน (กล้องมือถือ)
-                <input type="file" accept="image/*" capture="environment" onchange="handleStrictCameraUpload(event, '${itemId}')" class="hidden">
-              </label>
             </div>
 
             <div id="photo-strip-${itemId}" class="flex items-center gap-2 overflow-x-auto py-1"></div>
@@ -1550,32 +1545,6 @@
       });
     }
 
-    async function handleStrictCameraUpload(event, itemId) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 1000
-      });
-      toast.fire({ icon: 'info', title: 'กำลังปรับขนาดภาพให้อ่านเร็ว...' });
-
-      try {
-        const compressedBase64 = await compressImageFile(file, 800, 800, 0.65);
-        addPhotoToItem(itemId, compressedBase64);
-        toast.fire({ icon: 'success', title: 'แนบรูปภาพเรียบร้อย (ขนาดเล็ก โหลดไว)' });
-      } catch (err) {
-        console.warn('Compress error:', err);
-        const reader = new FileReader();
-        reader.onload = (e) => addPhotoToItem(itemId, e.target.result);
-        reader.readAsDataURL(file);
-      } finally {
-        event.target.value = '';
-      }
-    }
-
     function openLiveCamera(itemId) {
       state.activeCameraItemId = itemId;
       const modal = document.getElementById('camera-modal');
@@ -1583,27 +1552,59 @@
       startCameraStream();
     }
 
-    function startCameraStream() {
+    async function startCameraStream() {
       const video = document.getElementById('live-camera-feed');
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: state.cameraFacingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        }).then(stream => {
-          state.cameraStream = stream;
-          video.srcObject = stream;
-        }).catch(err => {
-          console.warn('Camera stream error:', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'ไม่สามารถเปิดกล้องได้',
-            text: 'กรุณาอนุญาตการเข้าถึงกล้องบนเบราว์เซอร์ หรือใช้ปุ่ม "ถ่ายด่วน (กล้องมือถือ)"'
-          });
-          closeCameraModal();
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เบราว์เซอร์ไม่รองรับกล้อง',
+          text: 'กรุณาเปิดหน้าเว็บผ่าน HTTPS และใช้เบราว์เซอร์ Chrome หรือ Safari บนมือถือ'
         });
+        closeCameraModal();
+        return;
+      }
+
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(t => t.stop());
+        state.cameraStream = null;
+      }
+
+      const facing = state.cameraFacingMode || 'environment';
+      const constraintSets = [
+        { video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+        { video: { facingMode: { ideal: facing } }, audio: false },
+        { video: { facingMode: facing }, audio: false },
+        { video: true, audio: false }
+      ];
+
+      let stream = null;
+      for (const constraints of constraintSets) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch (e) {
+          console.warn('Camera constraint failed, trying fallback...', constraints, e);
+        }
+      }
+
+      if (stream) {
+        state.cameraStream = stream;
+        video.srcObject = stream;
+        video.muted = true;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('autoplay', 'true');
+        try {
+          await video.play();
+        } catch (playErr) {
+          console.warn('video.play() auto-play error:', playErr);
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่สามารถเปิดกล้องได้',
+          text: 'กรุณาตรวจสอบการอนุญาตใช้งานกล้อง (Camera Permission) ในการตั้งค่าของเบราว์เซอร์บนมือถือ'
+        });
+        closeCameraModal();
       }
     }
 
@@ -1611,6 +1612,7 @@
       state.cameraFacingMode = state.cameraFacingMode === 'environment' ? 'user' : 'environment';
       if (state.cameraStream) {
         state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream = null;
       }
       startCameraStream();
     }
@@ -1644,7 +1646,7 @@
       addPhotoToItem(state.activeCameraItemId, base64Img);
 
       closeCameraModal();
-      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย (ขนาดเล็ก โหลดไว)', timer: 1000, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: 'บันทึกรูปถ่ายเรียบร้อย', timer: 1000, showConfirmButton: false });
     }
 
     function closeCameraModal() {
@@ -2546,24 +2548,58 @@
     }
 
     function showDayScheduleModal(dateStr, dayPlans) {
+      let currentPlans = dayPlans;
+      if (!currentPlans) {
+        currentPlans = state.plans.filter(p => p.date === dateStr);
+      }
+
       let listHtml = '';
-      if (dayPlans.length === 0) {
-        listHtml = '<p class="text-sm text-slate-400 py-4 text-center">ไม่มีแผนงาน PM พิเศษในวันนี้</p>';
+      if (currentPlans.length === 0) {
+        listHtml = `
+          <div class="text-center py-6">
+            <p class="text-sm text-slate-400">ไม่มีแผนงาน PM ในวันที่นี้</p>
+          </div>
+        `;
       } else {
-        listHtml = dayPlans.map(p => {
+        listHtml = currentPlans.map(p => {
           const sheet = state.checkSheets.find(s => s.id === p.checkSheetId);
+          const isDone = p.status === 'completed';
+          const isPostponed = p.status === 'postponed';
+
+          let statusBadge = `<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">🕒 รอตรวจ</span>`;
+          if (isDone) {
+            statusBadge = `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">✅ เสร็จสิ้น</span>`;
+          } else if (isPostponed) {
+            statusBadge = `<span class="text-[10px] bg-orange-100 text-orange-800 px-2 py-0.5 rounded font-semibold">⏳ เลื่อนแผน</span>`;
+          }
+
           return `
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-2 border border-slate-100">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-slate-800 text-sm">${p.machineName}</h4>
-                  <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">${p.frequency}</span>
+            <div class="p-3.5 bg-slate-50 hover:bg-indigo-50/40 rounded-2xl mb-3 border border-slate-200/80 transition shadow-sm space-y-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="font-bold text-slate-800 text-sm">${p.machineName}</h4>
+                    <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">${p.frequency || 'รายวัน'}</span>
+                    ${statusBadge}
+                  </div>
+                  <p class="text-xs text-slate-600 mt-1 flex items-center gap-1">
+                    <span>📋 ${sheet ? sheet.name : 'แบบฟอร์มเช็คชีท'}</span>
+                  </p>
+                  <p class="text-[11px] text-slate-500">👤 ผู้รับผิดชอบ: <span class="font-medium text-slate-700">${p.assignee || 'ทีม PM ประจำกะ'}</span></p>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5">📋 ${sheet ? sheet.name : 'แบบฟอร์มเช็คชีท'} | ผู้ตรวจ: ${p.assignee || 'ทีม PM'}</p>
               </div>
-              <button onclick="quickInspect('${p.machineName}'); Swal.close();" class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-700 transition">
-                เปิดตรวจเช็ค &rarr;
-              </button>
+
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                <button type="button" onclick="editOrReschedulePlanModal('${p.id}', '${dateStr}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition flex items-center gap-1">
+                  ✏️ แก้ไข / เลื่อนแผน
+                </button>
+                <button type="button" onclick="deletePlan('${p.id}', '${dateStr}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition flex items-center gap-1">
+                  🗑️ ลบ
+                </button>
+                <button type="button" onclick="quickInspect('${p.machineName}'); Swal.close();" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 shadow-sm">
+                  📋 ตรวจเช็ค &rarr;
+                </button>
+              </div>
             </div>
           `;
         }).join('');
@@ -2571,9 +2607,300 @@
 
       Swal.fire({
         title: `📅 แผนงาน PM ประจำวันที่ ${dateStr}`,
-        html: `<div class="text-left mt-3 max-h-80 overflow-y-auto">${listHtml}</div>`,
+        width: '640px',
+        html: `
+          <div class="text-left mt-2">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+              <span class="text-xs text-slate-500 font-medium">รวมทั้งหมด ${currentPlans.length} แผนงาน</span>
+              <button type="button" onclick="openAddSinglePlanModal('${dateStr}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+                ➕ เพิ่มแผนงานวันนี้
+              </button>
+            </div>
+            <div class="max-h-96 overflow-y-auto pr-1">
+              ${listHtml}
+            </div>
+          </div>
+        `,
         confirmButtonText: 'ปิดหน้าต่าง',
         confirmButtonColor: '#4F46E5'
+      });
+    }
+
+    function editOrReschedulePlanModal(planId, currentDateStr = '') {
+      const plan = state.plans.find(p => p.id === planId);
+      if (!plan) {
+        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลแผนงาน' });
+        return;
+      }
+
+      const sheetOptions = state.checkSheets.map(s => `
+        <option value="${s.id}" ${plan.checkSheetId === s.id ? 'selected' : ''}>${s.name} (${s.items.length} จุดตรวจ - ${s.department})</option>
+      `).join('');
+
+      const machineOptions = state.machines.map(m => `
+        <option value="${m.name}" ${plan.machineName === m.name ? 'selected' : ''}>${m.name} (${m.station}) - ${m.location}</option>
+      `).join('');
+
+      const freqs = ['รายวัน', 'เริ่มสตาร์ทเครื่อง', 'ประจำสัปดาห์', 'ทุก 15 วัน', 'ประจำเดือน', 'ประจำ 3 เดือน', 'ประจำ 6 เดือน', 'ประจำปี'];
+      const freqOptions = freqs.map(f => `
+        <option value="${f}" ${(plan.frequency === f) ? 'selected' : ''}>${f}</option>
+      `).join('');
+
+      const statusOptions = [
+        { val: 'pending', label: '🕒 รอตรวจ (Pending)' },
+        { val: 'postponed', label: '⏳ เลื่อนแผน (Postponed)' },
+        { val: 'completed', label: '✅ เสร็จสิ้น (Completed)' }
+      ].map(s => `
+        <option value="${s.val}" ${(plan.status === s.val) ? 'selected' : ''}>${s.label}</option>
+      `).join('');
+
+      Swal.fire({
+        title: '✏️ แก้ไข / เลื่อนแผนงาน PM',
+        width: '600px',
+        html: `
+          <div class="text-left space-y-3.5 text-sm max-h-[75vh] overflow-y-auto pr-1">
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900">
+              <label class="block text-xs font-bold mb-1">📅 วันที่ตามแผน (เปลี่ยนวันที่ตรงนี้เพื่อ "เลื่อนแผน") *</label>
+              <input type="date" id="edit-plan-date" value="${plan.date || currentDateStr || getTodayDateString()}" class="w-full px-3 py-2 border border-amber-300 rounded-xl font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500">
+              <p class="text-[11px] text-amber-700 mt-1">📌 หากต้องการเลื่อนวัน ให้เลือกวันที่ใหม่ที่ต้องการ แผนจะย้ายไปวันนั้นทันที</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">สถานะของแผนงาน (Status)</label>
+              <select id="edit-plan-status" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold">
+                ${statusOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">เครื่องจักรที่ตรวจเช็ค</label>
+              <select id="edit-plan-machine" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                ${machineOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">แบบฟอร์มเช็คชีท</label>
+              <select id="edit-plan-sheet" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                ${sheetOptions}
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ความถี่</label>
+                <select id="edit-plan-freq" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                  ${freqOptions}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ผู้รับผิดชอบ / ช่างซ่อมบำรุง</label>
+                <input type="text" id="edit-plan-assignee" value="${plan.assignee || 'ทีม PM ประจำกะ'}" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '💾 บันทึกการแก้ไข / เลื่อนแผน',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#4F46E5',
+        preConfirm: () => {
+          const newDate = document.getElementById('edit-plan-date').value;
+          const newStatus = document.getElementById('edit-plan-status').value;
+          const newMachine = document.getElementById('edit-plan-machine').value;
+          const newSheet = document.getElementById('edit-plan-sheet').value;
+          const newFreq = document.getElementById('edit-plan-freq').value;
+          const newAssignee = document.getElementById('edit-plan-assignee').value;
+
+          if (!newDate || !newMachine || !newSheet) {
+            Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return false;
+          }
+          return { newDate, newStatus, newMachine, newSheet, newFreq, newAssignee };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          plan.date = res.value.newDate;
+          plan.status = res.value.newStatus;
+          plan.machineName = res.value.newMachine;
+          plan.checkSheetId = res.value.newSheet;
+          plan.frequency = res.value.newFreq;
+          plan.assignee = res.value.newAssignee;
+
+          localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+          renderPlanner();
+
+          if (state.gasUrl) {
+            fetch(state.gasUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'savePlan', payload: plan })
+            }).catch(e => console.warn('GAS Save plan error:', e));
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'บันทึกเรียบร้อย!',
+            text: `อัปเดตแผนของ ${plan.machineName} (วันที่ ${plan.date}) เรียบร้อยแล้ว`,
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }
+      });
+    }
+
+    function deletePlan(planId, dateStr = '') {
+      const plan = state.plans.find(p => p.id === planId);
+      if (!plan) return;
+
+      Swal.fire({
+        title: 'ยืนยันการลบแผนงาน?',
+        text: `ต้องการลบแผนงาน PM สำหรับ "${plan.machineName}" วันที่ ${plan.date} หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#E11D48',
+        cancelButtonColor: '#64748B',
+        confirmButtonText: '🗑️ ลบแผนงาน',
+        cancelButtonText: 'ยกเลิก'
+      }).then(result => {
+        if (result.isConfirmed) {
+          state.plans = state.plans.filter(p => p.id !== planId);
+          localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+          renderPlanner();
+
+          if (state.gasUrl) {
+            fetch(state.gasUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'deletePlan', planId: planId })
+            }).catch(e => console.warn('GAS Delete plan error:', e));
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'ลบแผนงานเรียบร้อย',
+            timer: 1200,
+            showConfirmButton: false
+          });
+        }
+      });
+    }
+
+    function openAddSinglePlanModal(defaultDate = '') {
+      if (state.checkSheets.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'ยังไม่มีแบบฟอร์มเช็คชีท',
+          text: 'กรุณาสร้างแบบฟอร์มเช็คชีทก่อนในแท็บ "แบบฟอร์มเช็คชีท"',
+          confirmButtonText: 'ไปสร้างเช็คชีท',
+          confirmButtonColor: '#4F46E5'
+        }).then(() => switchTab('checksheets'));
+        return;
+      }
+
+      const sheetOptions = state.checkSheets.map(s => `
+        <option value="${s.id}">${s.name} (${s.items.length} จุดตรวจ - ${s.department})</option>
+      `).join('');
+
+      const machineOptions = state.machines.map(m => `
+        <option value="${m.name}">${m.name} (${m.station}) - ${m.location}</option>
+      `).join('');
+
+      Swal.fire({
+        title: '➕ เพิ่มแผนงาน PM ในวันที่เลือก',
+        width: '600px',
+        html: `
+          <div class="text-left space-y-3.5 text-sm max-h-[75vh] overflow-y-auto pr-1">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">1. วันที่ตามแผน *</label>
+              <input type="date" id="add-plan-date" value="${defaultDate || getTodayDateString()}" class="w-full px-3 py-2 border rounded-xl font-medium focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">2. เลือกเครื่องจักร *</label>
+              <select id="add-plan-machine" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                ${machineOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">3. เลือกแบบฟอร์มเช็คชีท *</label>
+              <select id="add-plan-sheet" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                ${sheetOptions}
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">4. ความถี่</label>
+                <select id="add-plan-freq" class="w-full px-3 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                  <option value="รายวัน" selected>ประจำวัน (Daily)</option>
+                  <option value="เริ่มสตาร์ทเครื่อง">เริ่มสตาร์ทเครื่อง (Pre-startup)</option>
+                  <option value="ประจำสัปดาห์">ประจำสัปดาห์ (Weekly)</option>
+                  <option value="ทุก 15 วัน">ทุก 15 วัน (Bi-weekly)</option>
+                  <option value="ประจำเดือน">ประจำเดือน (Monthly)</option>
+                  <option value="ประจำ 3 เดือน">ประจำ 3 เดือน (Quarterly)</option>
+                  <option value="ประจำ 6 เดือน">ประจำ 6 เดือน (Semi-Annual)</option>
+                  <option value="ประจำปี">ประจำปี (Annual)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">5. ผู้รับผิดชอบ</label>
+                <input type="text" id="add-plan-assignee" placeholder="ทีม PM ประจำกะ" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '💾 บันทึกแผนงาน',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#4F46E5',
+        preConfirm: () => {
+          const planDate = document.getElementById('add-plan-date').value;
+          const machine = document.getElementById('add-plan-machine').value;
+          const sheet = document.getElementById('add-plan-sheet').value;
+          const freq = document.getElementById('add-plan-freq').value;
+          const assignee = document.getElementById('add-plan-assignee').value || 'ทีม PM ประจำกะ';
+
+          if (!planDate || !machine || !sheet) {
+            Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return false;
+          }
+          return { planDate, machine, sheet, freq, assignee };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          const newPlan = {
+            id: 'PLN-' + Date.now(),
+            machineName: res.value.machine,
+            checkSheetId: res.value.sheet,
+            frequency: res.value.freq,
+            date: res.value.planDate,
+            assignee: res.value.assignee,
+            status: 'pending'
+          };
+          state.plans.push(newPlan);
+          localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
+          renderPlanner();
+
+          if (state.gasUrl) {
+            fetch(state.gasUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'savePlan', payload: newPlan })
+            }).catch(e => console.warn('GAS Save plan error:', e));
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'เพิ่มแผนงานเรียบร้อย!',
+            timer: 1200,
+            showConfirmButton: false
+          });
+        }
       });
     }
 
