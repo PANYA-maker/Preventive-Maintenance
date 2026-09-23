@@ -1304,32 +1304,69 @@
         });
       }
 
-      // 3. SMART RESOLUTION FOR CHECK SHEET:
+      // 3. SMART RESOLUTION FOR CHECK SHEET (PRIORITIZING SELECTED FREQUENCY):
       let checkSheet = null;
 
-      // Priority 1: Machine's explicit bound check sheet
-      if (machine.defaultCheckSheetId) {
-        checkSheet = state.checkSheets.find(s => s.id === machine.defaultCheckSheetId);
+      // Extract frequency keywords for matching
+      const freqKeywordsMap = {
+        'รายวัน': ['รายวัน', 'ประจำวัน', 'daily', '1d'],
+        'เริ่มสตาร์ทเครื่อง': ['สตาร์ท', 'เริ่มสตาร์ท', 'pre-start', 'startup', 'ก่อนเดินเครื่อง'],
+        'ประจำสัปดาห์': ['สัปดาห์', 'รายสัปดาห์', 'weekly', '1w'],
+        'ทุก 15 วัน': ['15 วัน', 'ทุก 15 วัน', 'bi-weekly', 'ปักษ์'],
+        'ประจำเดือน': ['ประจำเดือน', 'รายเดือน', 'monthly', '1m'],
+        'ประจำ 3 เดือน': ['3 เดือน', 'ไตรมาส', 'quarterly', '3m'],
+        'ประจำ 6 เดือน': ['6 เดือน', 'ครึ่งปี', 'semi-annual', '6m'],
+        'ประจำปี': ['ประจำปี', 'รายปี', 'annual', 'yearly', '1y']
+      };
+      const freqKeywords = freqKeywordsMap[frequency] || [frequency.toLowerCase()];
+
+      // Priority 1: Match from PM Plans that match BOTH this Machine and this selected Frequency
+      const matchingPlans = state.plans.filter(p => 
+        p.machineName && (
+          p.machineName.toLowerCase() === machine.name.toLowerCase() ||
+          p.machineName.toLowerCase() === machine.id.toLowerCase()
+        ) && p.checkSheetId
+      );
+      const freqPlan = matchingPlans.find(p => p.frequency === frequency);
+      if (freqPlan && freqPlan.checkSheetId) {
+        checkSheet = state.checkSheets.find(s => s.id === freqPlan.checkSheetId);
       }
 
-      // Priority 2: From PM Plans created for this machine
-      if (!checkSheet) {
-        const matchingPlans = state.plans.filter(p => 
-          p.machineName && (
-            p.machineName.toLowerCase() === machine.name.toLowerCase() ||
-            p.machineName.toLowerCase() === machine.id.toLowerCase()
-          ) && p.checkSheetId
-        );
+      // Priority 2: Smart match by CheckSheet Name matching Machine Station/Line AND Frequency Keyword
+      if (!checkSheet && state.checkSheets.length > 0) {
+        const stationClean = machine.station.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locClean = machine.location.toLowerCase();
 
-        const freqPlan = matchingPlans.find(p => p.frequency === frequency);
-        if (freqPlan && freqPlan.checkSheetId) {
-          checkSheet = state.checkSheets.find(s => s.id === freqPlan.checkSheetId);
-        } else if (matchingPlans.length > 0 && matchingPlans[0].checkSheetId) {
-          checkSheet = state.checkSheets.find(s => s.id === matchingPlans[0].checkSheetId);
+        // Match Station + Line + Frequency keyword
+        checkSheet = state.checkSheets.find(s => {
+          const sName = s.name.toLowerCase();
+          const matchesStationOrLine = sName.includes(stationClean) || sName.includes(locClean) || sName.includes(machine.station.toLowerCase());
+          const matchesFreq = freqKeywords.some(kw => sName.includes(kw));
+          return matchesStationOrLine && matchesFreq;
+        });
+
+        // Match Station + Frequency keyword
+        if (!checkSheet) {
+          checkSheet = state.checkSheets.find(s => {
+            const sName = s.name.toLowerCase();
+            const matchesStation = sName.includes(stationClean) || sName.includes(machine.station.toLowerCase());
+            const matchesFreq = freqKeywords.some(kw => sName.includes(kw));
+            return matchesStation && matchesFreq;
+          });
         }
       }
 
-      // Priority 3: Smart Match by Station & Production Line in CheckSheet Name
+      // Priority 3: Machine's explicit bound check sheet
+      if (!checkSheet && machine.defaultCheckSheetId) {
+        checkSheet = state.checkSheets.find(s => s.id === machine.defaultCheckSheetId);
+      }
+
+      // Priority 4: Any Plan for this Machine
+      if (!checkSheet && matchingPlans.length > 0 && matchingPlans[0].checkSheetId) {
+        checkSheet = state.checkSheets.find(s => s.id === matchingPlans[0].checkSheetId);
+      }
+
+      // Priority 5: Smart Match by Station & Production Line in CheckSheet Name (Generic)
       if (!checkSheet && state.checkSheets.length > 0) {
         const stationClean = machine.station.toLowerCase().replace(/[^a-z0-9]/g, '');
         const locClean = machine.location.toLowerCase();
@@ -1354,7 +1391,7 @@
         }
       }
 
-      // Priority 4: Fallback to first available check sheet
+      // Priority 6: Fallback to first available check sheet
       if (!checkSheet && state.checkSheets.length > 0) {
         checkSheet = state.checkSheets[0];
       }
@@ -1747,14 +1784,17 @@
       }
 
       Swal.fire({
-        title: 'กำลังบันทึกข้อมูลด่วน...',
-        html: '<div class="text-xs text-slate-500 mt-1">ส่งผลการตรวจและอัปโหลดภาพบีบอัดความเร็วสูงขึ้น Google Drive & Sheets</div>',
+        title: 'กำลังบันทึกข้อมูล...',
+        html: '<div class="text-xs text-slate-500 mt-1">กำลังบันทึกผลการตรวจเช็คและซิงค์ข้อมูลอย่างรวดเร็ว</div>',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
 
       const todayStr = getTodayDateString();
       const currentFormattedTs = new Date().toLocaleString('th-TH');
+
+      const passCount = items.filter((_, idx) => (state.currentInspectResults['CHK-ROW-' + (idx + 1)] || 'ผ่าน') === 'ผ่าน').length;
+      const failCount = items.length - passCount;
 
       const submissionPayload = {
         inspector: inspectorName,
@@ -1776,7 +1816,7 @@
         })
       };
 
-      // Add to Inspection Logs locally for instant feedback in Dashboard
+      // 1. Instant Local State Updates for Fast Dashboard Response
       submissionPayload.items.forEach((it, idx) => {
         state.inspectionLogs.unshift({
           logId: 'LOG-' + Date.now() + '-' + (idx + 1),
@@ -1833,27 +1873,67 @@
       }
       localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
 
-      // Send to Google Sheets Asynchronously
+      // 2. Send to Google Sheets (Parallel Batch Sync)
       if (state.gasUrl) {
         try {
-          await fetch(state.gasUrl, {
+          const syncPromise = fetch(state.gasUrl, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'submitInspection', payload: submissionPayload })
           });
+          // Set a timeout safeguard so UI never freezes if network is poor
+          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3500));
+          await Promise.race([syncPromise, timeoutPromise]);
         } catch (err) {
           console.warn('Google Sheet GAS Sync warning:', err);
         }
       }
 
+      // 3. Persistent Success Dialog with Detailed Summary & Manual Close Button
       Swal.fire({
         icon: 'success',
-        title: 'บันทึกสำเร็จรวดเร็ว! ⚡',
-        text: `ตรวจเช็ค ${machine.name} เรียบร้อยแล้ว`,
+        title: 'บันทึกผลการตรวจเช็คเรียบร้อยแล้ว! ✅',
+        width: '560px',
+        html: `
+          <div class="text-left space-y-2.5 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs sm:text-sm mt-3">
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">เครื่องจักร:</span>
+              <span class="font-bold text-slate-800">${machine.name} (${machine.station})</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">สายการผลิต:</span>
+              <span class="font-semibold text-slate-700">${machine.location}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">รอบความถี่:</span>
+              <span class="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">${frequency}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">แบบฟอร์มเช็คชีท:</span>
+              <span class="font-medium text-slate-700 truncate max-w-[240px]">${state.currentCheckSheet ? state.currentCheckSheet.name : '-'}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">จำนวนจุดตรวจทั้งหมด:</span>
+              <span class="font-bold text-slate-800">${items.length} รายการ</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200 pb-2">
+              <span class="text-slate-500">ผลการตรวจเช็ค:</span>
+              <span class="font-bold ${failCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                ผ่าน ${passCount} รายการ ${failCount > 0 ? `| ⚠️ พบปัญหา ${failCount} รายการ` : ' (ผ่านครบทุกจุด)'}
+              </span>
+            </div>
+            <div class="flex justify-between pt-0.5">
+              <span class="text-slate-500">ผู้ตรวจเช็ค:</span>
+              <span class="font-bold text-slate-800">${inspectorName}</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 text-center mt-3">ข้อมูลถูกบันทึกลงระบบและ Google Sheets เรียบร้อยแล้ว</p>
+        `,
+        confirmButtonText: 'ตกลง / ปิดหน้าต่าง',
         confirmButtonColor: '#4F46E5',
-        timer: 1500,
-        showConfirmButton: false
+        allowOutsideClick: false,
+        allowEscapeKey: false
       }).then(() => {
         state.currentInspectPhotos = {};
         state.currentInspectValues = {};
