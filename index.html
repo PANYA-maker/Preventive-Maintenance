@@ -795,28 +795,58 @@
       }
     });
 
+    function safeSetLocalStorage(key, data) {
+      try {
+        const serialized = typeof data === 'string' ? data : JSON.stringify(data);
+        localStorage.setItem(key, serialized);
+      } catch (e) {
+        console.warn(`localStorage quota exceeded for ${key}. Performing safe cleanup...`, e);
+        try {
+          if (key === 'PM_INSPECTION_LOGS' && Array.isArray(data)) {
+            // Keep recent logs and strip heavy Base64 image strings from older logs
+            const trimmedLogs = data.slice(0, 30).map((log, idx) => {
+              if (idx > 3) {
+                return { ...log, imageUrls: (log.imageUrls || []).filter(u => typeof u === 'string' && u.startsWith('http')) };
+              }
+              return log;
+            });
+            localStorage.setItem(key, JSON.stringify(trimmedLogs));
+          } else if (key === 'PM_DEFECTS' && Array.isArray(data)) {
+            const trimmedDefects = data.slice(0, 25);
+            localStorage.setItem(key, JSON.stringify(trimmedDefects));
+          }
+        } catch (cleanupErr) {
+          console.warn('localStorage fallback failed silently:', cleanupErr);
+        }
+      }
+    }
+
     function loadStoredData() {
-      const savedMachines = localStorage.getItem('PM_MACHINES');
-      const savedCheckSheets = localStorage.getItem('PM_CHECKSHEETS');
-      const savedDefects = localStorage.getItem('PM_DEFECTS');
-      const savedPlans = localStorage.getItem('PM_PLANS');
-      const savedLogs = localStorage.getItem('PM_INSPECTION_LOGS');
+      try {
+        const savedMachines = localStorage.getItem('PM_MACHINES');
+        const savedCheckSheets = localStorage.getItem('PM_CHECKSHEETS');
+        const savedDefects = localStorage.getItem('PM_DEFECTS');
+        const savedPlans = localStorage.getItem('PM_PLANS');
+        const savedLogs = localStorage.getItem('PM_INSPECTION_LOGS');
 
-      if (savedMachines) state.machines = JSON.parse(savedMachines);
-      else if (window.INITIAL_DATA && window.INITIAL_DATA.machines) state.machines = window.INITIAL_DATA.machines;
+        if (savedMachines) state.machines = JSON.parse(savedMachines);
+        else if (window.INITIAL_DATA && window.INITIAL_DATA.machines) state.machines = window.INITIAL_DATA.machines;
 
-      if (savedCheckSheets) state.checkSheets = JSON.parse(savedCheckSheets);
-      else if (window.INITIAL_DATA && window.INITIAL_DATA.checkSheets) state.checkSheets = window.INITIAL_DATA.checkSheets;
-      else state.checkSheets = [];
+        if (savedCheckSheets) state.checkSheets = JSON.parse(savedCheckSheets);
+        else if (window.INITIAL_DATA && window.INITIAL_DATA.checkSheets) state.checkSheets = window.INITIAL_DATA.checkSheets;
+        else state.checkSheets = [];
 
-      if (savedDefects) state.defects = JSON.parse(savedDefects);
-      else state.defects = [];
+        if (savedDefects) state.defects = JSON.parse(savedDefects);
+        else state.defects = [];
 
-      if (savedPlans) state.plans = JSON.parse(savedPlans);
-      else state.plans = [];
+        if (savedPlans) state.plans = JSON.parse(savedPlans);
+        else state.plans = [];
 
-      if (savedLogs) state.inspectionLogs = JSON.parse(savedLogs);
-      else state.inspectionLogs = [];
+        if (savedLogs) state.inspectionLogs = JSON.parse(savedLogs);
+        else state.inspectionLogs = [];
+      } catch (e) {
+        console.warn('loadStoredData parse error:', e);
+      }
 
       document.getElementById('gas-url-input').value = state.gasUrl;
       document.getElementById('supervisor-pin-input').value = state.supervisorPin;
@@ -1541,7 +1571,7 @@
     }
 
     // ================= CLIENT-SIDE IMAGE COMPRESSION (BLAZING FAST) =================
-    function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
+    function compressImageFile(file, maxWidth = 600, maxHeight = 600, quality = 0.55) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1660,7 +1690,7 @@
       
       let w = video.videoWidth || 640;
       let h = video.videoHeight || 480;
-      const maxDim = 800;
+      const maxDim = 600;
       if (w > maxDim || h > maxDim) {
         if (w > h) {
           h = Math.round((h * maxDim) / w);
@@ -1679,7 +1709,7 @@
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(video, 0, 0, w, h);
 
-      const base64Img = canvas.toDataURL('image/jpeg', 0.65);
+      const base64Img = canvas.toDataURL('image/jpeg', 0.55);
       addPhotoToItem(state.activeCameraItemId, base64Img);
 
       closeCameraModal();
@@ -1733,7 +1763,7 @@
       });
     }
 
-    // ================= SUBMISSION WITH STRICT VALIDATION =================
+    // ================= SUBMISSION WITH STRICT VALIDATION & ROBUST IOS SUPPORT =================
     async function submitInspection() {
       const inspectorName = document.getElementById('inspector-name-input').value.trim();
       if (!inspectorName) {
@@ -1790,157 +1820,168 @@
         didOpen: () => Swal.showLoading()
       });
 
-      const todayStr = getTodayDateString();
-      const currentFormattedTs = new Date().toLocaleString('th-TH');
+      try {
+        const todayStr = getTodayDateString();
+        const currentFormattedTs = new Date().toLocaleString('th-TH');
 
-      const passCount = items.filter((_, idx) => (state.currentInspectResults['CHK-ROW-' + (idx + 1)] || 'ผ่าน') === 'ผ่าน').length;
-      const failCount = items.length - passCount;
+        const passCount = items.filter((_, idx) => (state.currentInspectResults['CHK-ROW-' + (idx + 1)] || 'ผ่าน') === 'ผ่าน').length;
+        const failCount = items.length - passCount;
 
-      const submissionPayload = {
-        inspector: inspectorName,
-        machineName: machine.name,
-        station: machine.station,
-        frequency: frequency,
-        checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
-        items: items.map((item, idx) => {
-          const itemId = 'CHK-ROW-' + (idx + 1);
-          return {
-            id: itemId,
-            taskName: item.taskName,
-            standard: item.standard,
-            measuredValue: state.currentInspectValues[itemId] || '',
-            result: state.currentInspectResults[itemId] || 'ผ่าน',
-            remark: state.currentInspectRemarks[itemId] || '',
-            images: state.currentInspectPhotos[itemId] || []
-          };
-        })
-      };
-
-      // 1. Instant Local State Updates for Fast Dashboard Response
-      submissionPayload.items.forEach((it, idx) => {
-        state.inspectionLogs.unshift({
-          logId: 'LOG-' + Date.now() + '-' + (idx + 1),
-          timestamp: currentFormattedTs,
-          date: todayStr,
+        const submissionPayload = {
           inspector: inspectorName,
           machineName: machine.name,
           station: machine.station,
           frequency: frequency,
           checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
-          taskName: it.taskName,
-          measuredValue: it.measuredValue,
-          result: it.result,
-          imageUrls: it.images,
-          remark: it.remark
-        });
-      });
-      localStorage.setItem('PM_INSPECTION_LOGS', JSON.stringify(state.inspectionLogs));
+          items: items.map((item, idx) => {
+            const itemId = 'CHK-ROW-' + (idx + 1);
+            return {
+              id: itemId,
+              taskName: item.taskName,
+              standard: item.standard,
+              measuredValue: state.currentInspectValues[itemId] || '',
+              result: state.currentInspectResults[itemId] || 'ผ่าน',
+              remark: state.currentInspectRemarks[itemId] || '',
+              images: state.currentInspectPhotos[itemId] || []
+            };
+          })
+        };
 
-      // Record Defects
-      submissionPayload.items.forEach(it => {
-        if (it.result === 'ไม่ผ่าน') {
-          const newDefect = {
-            logId: 'DEF-' + Date.now(),
+        // 1. Instant Local State Updates with Safe Storage Wrapper
+        submissionPayload.items.forEach((it, idx) => {
+          state.inspectionLogs.unshift({
+            logId: 'LOG-' + Date.now() + '-' + (idx + 1),
+            timestamp: currentFormattedTs,
+            date: todayStr,
             inspector: inspectorName,
             machineName: machine.name,
             station: machine.station,
             frequency: frequency,
+            checkSheetName: state.currentCheckSheet ? state.currentCheckSheet.name : '',
             taskName: it.taskName,
-            result: 'ไม่ผ่าน',
-            imageUrl: it.images[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
-            remark: it.remark,
-            timestamp: currentFormattedTs,
-            status: 'รอดำเนินการแก้ไข'
-          };
-          state.defects.unshift(newDefect);
-        }
-      });
-      localStorage.setItem('PM_DEFECTS', JSON.stringify(state.defects));
+            measuredValue: it.measuredValue,
+            result: it.result,
+            imageUrls: it.images,
+            remark: it.remark
+          });
+        });
+        safeSetLocalStorage('PM_INSPECTION_LOGS', state.inspectionLogs);
 
-      // Update Plan Status
-      const planIdx = state.plans.findIndex(p => p.machineName === machine.name && p.date === todayStr);
-      if (planIdx >= 0) {
-        state.plans[planIdx].status = 'completed';
-      } else {
-        state.plans.push({
-          id: 'PLN-' + Date.now(),
-          machineName: machine.name,
-          frequency: frequency,
-          date: todayStr,
-          assignee: inspectorName,
-          status: 'completed'
+        // Record Defects
+        submissionPayload.items.forEach(it => {
+          if (it.result === 'ไม่ผ่าน') {
+            const newDefect = {
+              logId: 'DEF-' + Date.now(),
+              inspector: inspectorName,
+              machineName: machine.name,
+              station: machine.station,
+              frequency: frequency,
+              taskName: it.taskName,
+              result: 'ไม่ผ่าน',
+              imageUrl: it.images[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
+              remark: it.remark,
+              timestamp: currentFormattedTs,
+              status: 'รอดำเนินการแก้ไข'
+            };
+            state.defects.unshift(newDefect);
+          }
+        });
+        safeSetLocalStorage('PM_DEFECTS', state.defects);
+
+        // Update Plan Status
+        const planIdx = state.plans.findIndex(p => p.machineName === machine.name && p.date === todayStr);
+        if (planIdx >= 0) {
+          state.plans[planIdx].status = 'completed';
+        } else {
+          state.plans.push({
+            id: 'PLN-' + Date.now(),
+            machineName: machine.name,
+            frequency: frequency,
+            date: todayStr,
+            assignee: inspectorName,
+            status: 'completed'
+          });
+        }
+        safeSetLocalStorage('PM_PLANS', state.plans);
+
+        // 2. Send to Google Sheets (Parallel Batch Sync with Timeout Safeguard)
+        if (state.gasUrl) {
+          try {
+            const syncPromise = fetch(state.gasUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'submitInspection', payload: submissionPayload })
+            });
+            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 4000));
+            await Promise.race([syncPromise, timeoutPromise]);
+          } catch (err) {
+            console.warn('Google Sheet GAS Sync warning:', err);
+          }
+        }
+
+        // 3. Persistent Success Dialog with Detailed Summary & Manual Close Button
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกผลการตรวจเช็คเรียบร้อยแล้ว! ✅',
+          width: '560px',
+          html: `
+            <div class="text-left space-y-2.5 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs sm:text-sm mt-3">
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">เครื่องจักร:</span>
+                <span class="font-bold text-slate-800">${machine.name} (${machine.station})</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">สายการผลิต:</span>
+                <span class="font-semibold text-slate-700">${machine.location}</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">รอบความถี่:</span>
+                <span class="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">${frequency}</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">แบบฟอร์มเช็คชีท:</span>
+                <span class="font-medium text-slate-700 truncate max-w-[240px]">${state.currentCheckSheet ? state.currentCheckSheet.name : '-'}</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">จำนวนจุดตรวจทั้งหมด:</span>
+                <span class="font-bold text-slate-800">${items.length} รายการ</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-200 pb-2">
+                <span class="text-slate-500">ผลการตรวจเช็ค:</span>
+                <span class="font-bold ${failCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                  ผ่าน ${passCount} รายการ ${failCount > 0 ? `| ⚠️ พบปัญหา ${failCount} รายการ` : ' (ผ่านครบทุกจุด)'}
+                </span>
+              </div>
+              <div class="flex justify-between pt-0.5">
+                <span class="text-slate-500">ผู้ตรวจเช็ค:</span>
+                <span class="font-bold text-slate-800">${inspectorName}</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 text-center mt-3">ข้อมูลถูกบันทึกลงระบบและ Google Sheets เรียบร้อยแล้ว</p>
+          `,
+          confirmButtonText: 'ตกลง / ปิดหน้าต่าง',
+          confirmButtonColor: '#4F46E5',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          state.currentInspectPhotos = {};
+          state.currentInspectValues = {};
+          state.currentInspectRemarks = {};
+          loadChecklistForSelectedMachine(machine.name);
+          if (state.userRole === 'supervisor') switchTab('dashboard');
+        });
+
+      } catch (error) {
+        console.error('Critical submit error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาดในการบันทึก',
+          text: error.message || 'กรุณาลองใหม่อีกครั้ง หรือตรวจสอบความจำบนอุปกรณ์',
+          confirmButtonText: 'ปิด',
+          confirmButtonColor: '#4F46E5'
         });
       }
-      localStorage.setItem('PM_PLANS', JSON.stringify(state.plans));
-
-      // 2. Send to Google Sheets (Parallel Batch Sync)
-      if (state.gasUrl) {
-        try {
-          const syncPromise = fetch(state.gasUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'submitInspection', payload: submissionPayload })
-          });
-          // Set a timeout safeguard so UI never freezes if network is poor
-          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3500));
-          await Promise.race([syncPromise, timeoutPromise]);
-        } catch (err) {
-          console.warn('Google Sheet GAS Sync warning:', err);
-        }
-      }
-
-      // 3. Persistent Success Dialog with Detailed Summary & Manual Close Button
-      Swal.fire({
-        icon: 'success',
-        title: 'บันทึกผลการตรวจเช็คเรียบร้อยแล้ว! ✅',
-        width: '560px',
-        html: `
-          <div class="text-left space-y-2.5 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs sm:text-sm mt-3">
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">เครื่องจักร:</span>
-              <span class="font-bold text-slate-800">${machine.name} (${machine.station})</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">สายการผลิต:</span>
-              <span class="font-semibold text-slate-700">${machine.location}</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">รอบความถี่:</span>
-              <span class="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">${frequency}</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">แบบฟอร์มเช็คชีท:</span>
-              <span class="font-medium text-slate-700 truncate max-w-[240px]">${state.currentCheckSheet ? state.currentCheckSheet.name : '-'}</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">จำนวนจุดตรวจทั้งหมด:</span>
-              <span class="font-bold text-slate-800">${items.length} รายการ</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-200 pb-2">
-              <span class="text-slate-500">ผลการตรวจเช็ค:</span>
-              <span class="font-bold ${failCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
-                ผ่าน ${passCount} รายการ ${failCount > 0 ? `| ⚠️ พบปัญหา ${failCount} รายการ` : ' (ผ่านครบทุกจุด)'}
-              </span>
-            </div>
-            <div class="flex justify-between pt-0.5">
-              <span class="text-slate-500">ผู้ตรวจเช็ค:</span>
-              <span class="font-bold text-slate-800">${inspectorName}</span>
-            </div>
-          </div>
-          <p class="text-[11px] text-slate-400 text-center mt-3">ข้อมูลถูกบันทึกลงระบบและ Google Sheets เรียบร้อยแล้ว</p>
-        `,
-        confirmButtonText: 'ตกลง / ปิดหน้าต่าง',
-        confirmButtonColor: '#4F46E5',
-        allowOutsideClick: false,
-        allowEscapeKey: false
-      }).then(() => {
-        state.currentInspectPhotos = {};
-        state.currentInspectValues = {};
-        state.currentInspectRemarks = {};
-        loadChecklistForSelectedMachine(machine.name);
-        if (state.userRole === 'supervisor') switchTab('dashboard');
-      });
     }
 
     // ================= 2. DASHBOARD (WITH DATE PICKER & CLICK-TO-VIEW DETAILS) =================
